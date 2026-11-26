@@ -19,7 +19,7 @@ class PwaAppShellView(HomeAssistantView):
     '''Serves the public installable PWA shell HTML (no sensitive data included).'''
 
     url = f"{HTTP_BASE_PATH}/app/{{slug}}"
-    extra_urls = [f"{HTTP_BASE_PATH}/app/{{slug}}/"]
+    extra_urls = [f"{HTTP_BASE_PATH}/app/{{slug}}/", f"{HTTP_BASE_PATH}/share/{{slug}}"]
     name = "pwa_app_studio:app_shell"
     requires_auth = False
 

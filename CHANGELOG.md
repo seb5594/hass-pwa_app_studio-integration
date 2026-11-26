@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.11.26.12
+
+- Open the matching device request in the Companion App and complete sign-in in the browser tab that started the request.
+- Use the default browser for Android sharing and installation handoffs.
+
 ## 2026.11.26.11
 
 - Open the native share dialog where supported. On Android WebViews, hand the web app link to a share page in Chrome.

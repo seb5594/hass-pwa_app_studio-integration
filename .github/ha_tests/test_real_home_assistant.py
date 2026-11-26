@@ -187,13 +187,25 @@ async def test_companion_approval_requires_app_access_and_device_proof(hass, stu
     confirm = request({"code": code, "confirm": True})
     confirm[KEY_HASS_REFRESH_TOKEN_ID] = "signed-in"
     confirm["hass_user"] = SimpleNamespace(
-        id="unlisted", is_admin=False, local_only=False, is_active=True, system_generated=False,
+        id="unlisted", name="Test user", is_admin=False, local_only=False, is_active=True,
+        system_generated=False,
         refresh_tokens={"signed-in": SimpleNamespace(token_type=TOKEN_TYPE_NORMAL, credential=object())},
     )
     with pytest.raises(web.HTTPForbidden):
         await approval.post(confirm)
     confirm["hass_user"].id = "allowed"
-    assert (await approval.post(confirm)).status == 200
+
+    direct = request({"reference": data["reference"]})
+    direct[KEY_HASS_REFRESH_TOKEN_ID] = "signed-in"
+    direct["hass_user"] = confirm["hass_user"]
+    details = json.loads((await approval.post(direct)).text)
+    assert details["code"] == code
+    assert "secret" not in details
+    with pytest.raises(web.HTTPBadRequest):
+        direct.json = AsyncMock(return_value={"reference": data["reference"], "confirm": True})
+        await approval.post(direct)
+    direct.json = AsyncMock(return_value={"reference": data["reference"], "confirm": True, "code": code})
+    assert (await approval.post(direct)).status == 200
     with pytest.raises(web.HTTPNotFound):
         await approval.post(confirm)
     with pytest.raises(web.HTTPForbidden):

@@ -89,6 +89,7 @@ footer {
 footer a { display: inline-block; padding: 4px; color: #dce5f3; font-size: .75rem; line-height: 1.5; text-underline-offset: 3px; }
 button { min-height: 44px; cursor: pointer; font: inherit; }
 .launch button { padding: .5rem 1rem; border: 0; border-radius: 2rem; background: #edf2ff; color: #182133; font-weight: 600; }
+.launch input[type="url"] { width:100%; margin-top:12px; padding:8px; font:inherit; }
 .companion-connect button, .companion-connect a { margin:4px; }
 .companion-connect button:not([data-start]) {
   color:#edf2ff; background:#ffffff12; border:1px solid #ffffff50;

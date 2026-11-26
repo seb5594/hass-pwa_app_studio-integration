@@ -65,20 +65,20 @@ Beim Teilen über den Browser verwendet der Gast-QR-Code die interne Home-Assist
 
 ## Die Browser-Web-App installieren
 
-1. Öffne unter **Teilen** auf Android **Zum Installieren in Chrome öffnen**. Wenn dein Handy die Seite in Home Assistant lässt, tippe auf **Browser-Link kopieren**, öffne Chrome als eigene App und füge den Link in dessen Adressleiste ein. Auf anderen Geräten kannst du **Auf diesem Gerät installieren** verwenden. Für die Browser-Installation braucht das Zielgerät eine erreichbare HTTPS-Adresse mit gültigem Zertifikat.
-2. Melde dich bei Home Assistant an, falls der Browser danach fragt. Auf iPhone und iPad öffnest du den Link in Safari und wählst **Teilen → Zum Home-Bildschirm**. Aktiviere **Als Web-App öffnen**, wenn Safari die Option zeigt. Auf Android tippe auf **Jetzt installieren**, wenn Chrome den Dialog anbietet. Sonst öffne das Chrome-Menü **⋮ → Installieren und Verknüpfung erstellen → Installieren**. Die Bezeichnung kann je nach Chrome-Version abweichen. Am Computer verwendest du die Installationsoption deines Browsers, sofern er sie anbietet. [Anleitung von Apple](https://support.apple.com/de-de/guide/iphone/iphea86e5236/ios) · [Anleitung für Chrome](https://support.google.com/chrome/answer/9658361?hl=de)
+1. Wähle unter **Teilen** die Schaltfläche **Zum Installieren im Browser öffnen** oder **Auf diesem Gerät installieren**. Wenn die Seite in Home Assistant bleibt, nutze **Browser-Link kopieren** und füge den Link in deinem Browser ein. Die Web-App braucht HTTPS mit gültigem Zertifikat.
+2. Auf iPhone und iPad öffnest du den Link in Safari und wählst **Teilen → Zum Home-Bildschirm**. Aktiviere **Als Web-App öffnen**, falls es angezeigt wird. Auf Android tippe auf **Jetzt installieren**, wenn dein Browser den Dialog anbietet, oder suche im Browsermenü nach **App installieren** oder **Zum Startbildschirm hinzufügen**. [Anleitung von Apple](https://support.apple.com/de-de/guide/iphone/iphea86e5236/ios)
+3. Öffne die App über das Symbol auf dem Startbildschirm. Melde dich an, falls du dazu aufgefordert wirst, oder nutze die Freigabe über die Companion-App.
 
 ### Die Web-App über die Companion-App freigeben
 
 1. Öffne im Studio die gespeicherte App, aktiviere **Zugriff → Anmeldung über die Companion-App erlauben** und speichere. Verwende HTTPS für die Web-App und in der Companion-App. Wähle in beiden denselben Home-Assistant-Server.
-2. Öffne auf Android den Browser-Link in Chrome oder starte die installierte App. Füge die App auf dem iPhone oder iPad zuerst in Safari zum Home-Bildschirm hinzu und öffne sie dann über ihr App-Symbol.
-3. Wähle **Über die Companion-App anmelden → Home Assistant öffnen**. Gib den angezeigten Gerätecode ein oder füge ihn ein. Prüfe App, Adresse und Konto und tippe auf **Anmeldung freigeben**. Falls der Link die Companion-App nicht öffnet, kannst du dort über eine Dashboard-Schaltfläche mit dem Navigationspfad `/pwa-app-studio-connect` direkt zur Freigabe springen.
-4. Wechsle zurück zur Web-App. Sie prüft die Freigabe automatisch. Du kannst auch auf **Freigabe prüfen** tippen. Jeder Code gilt fünf Minuten und für eine Anmeldung. **Im Browser anmelden** bleibt verfügbar.
+2. Öffne den Link in deinem Browser oder starte die installierte App. Auf dem iPhone oder iPad öffnest du die installierte Kopie über das Symbol auf dem Home-Bildschirm.
+3. Wähle **Über die Companion-App anmelden → Home Assistant öffnen**. Vergleiche den angezeigten Code mit dem im Browser und bestätige die Freigabe. Falls ein Eingabefeld erscheint, gib den Code manuell ein. Du kannst die Freigabeseite auch über eine Dashboard-Schaltfläche mit dem Pfad `/pwa-app-studio-connect` öffnen.
+4. Wechsle zum selben Browser-Tab oder zur installierten Web-App zurück. Die Anmeldung erfolgt automatisch. Du kannst auch auf **Freigabe prüfen** tippen. Jeder Code gilt fünf Minuten und für eine Anmeldung. **Im Browser anmelden** bleibt verfügbar.
 
 Die Web-App bekommt eine eigene Home-Assistant-Sitzung mit den Rechten deines Kontos. Du kannst sie im Home-Assistant-Profil unter **Sicherheit → Aktualisierungstoken** widerrufen.
-3. Öffne die App über das Symbol auf dem Startbildschirm. Die eigenständig installierte App verwendet ihre Browsersitzung. Wenn dort noch keine Sitzung vorhanden ist, zeigt Home Assistant die Anmeldung an.
 
-Mit **Link teilen** öffnest du das Teilen-Menü deines Geräts. **Browser-Link kopieren** gibt dir dieselbe URL wie der QR-Code zum Einfügen.
+**Link teilen** nutzt das Teilen-Menü des Geräts, wenn es verfügbar ist. In der Android-Companion-App kann sich die Freigabeseite im Standardbrowser öffnen. Je nach Browser kannst du dort das Browsermenü oder **Browser-Link kopieren** nutzen.
 
 Der Offline-Cache speichert die App-Hülle, das Symbol und weitere öffentliche Dateien. Karten, aktuelle Zustände und die Bedienung deiner Geräte brauchen eine Verbindung zu Home Assistant.
 
@@ -86,7 +86,7 @@ Der Offline-Cache speichert die App-Hülle, das Symbol und weitere öffentliche 
 
 - **Zugriff verweigert.** Prüfe, welches Konto angemeldet ist und ob es unter **Zugriff** freigegeben wurde. Bei Gästen muss das Handy die interne Adresse aus deinem Heimnetz erreichen.
 - **Der Companion-Link bleibt als Text stehen.** Verwende eine Schaltfläche im Dashboard mit dem relativen Pfad aus dem Designer.
-- **Die Installationsoption fehlt.** Öffne den Browser-Link auf iPhone oder iPad in Safari. Verwende auf anderen Geräten einen Chromium-Browser mit App-Installation und prüfe, ob sich die HTTPS-Adresse ohne Zertifikatfehler öffnen lässt.
+- **Die Installationsoption fehlt.** Prüfe, ob dein Browser die Installation auf dem Startbildschirm unterstützt und ob sich die HTTPS-Adresse ohne Zertifikatfehler öffnen lässt.
 - **Eine Karte fehlt.** Prüfe die Karte zuerst in Home Assistant mit demselben Konto. Bei einer benutzerdefinierten Karte prüfe auch, ob ihre Ressource im Frontend verfügbar ist.
 
 Wenn du festhängst, gib am besten deine Core-Version, die Studio-Version, das Gerät und die Schritte an, mit denen sich das Problem nachstellen lässt. [Problem melden](https://github.com/seb5594/hass-pwa_app_studio-integration/issues) · [Versionsverlauf](CHANGELOG.md) · [Architektur](docs/architekturpruefung.md)

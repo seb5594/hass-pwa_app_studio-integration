@@ -80,20 +80,20 @@ For browser sharing, the guest-mode QR code uses the internal Home Assistant add
 
 ## Install the browser web app
 
-1. On Android, select **Open in Chrome to install** under **Share**. If the phone keeps the page inside Home Assistant, select **Copy browser link**, launch Chrome itself and paste the link into its address bar. On other devices, use **Install on this device**. The target device needs an HTTPS address with a valid certificate.
-2. Sign in to Home Assistant if the browser asks. On iPhone or iPad, open the link in Safari and use **Share → Add to Home Screen**. Turn on **Open as Web App** if it is shown. On Android, choose **Install now** if Chrome offers the prompt. Otherwise choose **⋮ → Install and create shortcut → Install** in Chrome. The wording can vary by browser version. On desktop, use the install option in a browser that offers it. [Apple instructions](https://support.apple.com/guide/iphone/iphea86e5236/ios) · [Chrome instructions](https://support.google.com/chrome/answer/9658361)
+1. Under **Share**, select **Open in browser to install** or **Install on this device**. If the page stays in Home Assistant, use **Copy browser link** and paste it into your preferred browser. The web app needs HTTPS with a valid certificate.
+2. On iPhone or iPad, open the link in Safari and use **Share → Add to Home Screen**. Turn on **Open as Web App** if shown. On Android, use **Install now** when your browser offers it, or look for **Install app** or **Add to Home screen** in its menu. [Apple instructions](https://support.apple.com/guide/iphone/iphea86e5236/ios)
+3. Open the app from its home-screen icon. Sign in if prompted, or use the Companion App approval below.
 
 ### Approve the web app from the Companion App
 
 1. In the Studio, open the saved app, enable **Access → Allow sign-in via the Companion App**, and save. Use HTTPS for the web app and in the Companion App. Select the same Home Assistant server in both places.
-2. On Android, open the browser link in Chrome or launch the installed app. On iPhone or iPad, add the app to your Home Screen in Safari first, then open it from its Home Screen icon.
-3. Select **Sign in via the Companion App → Open Home Assistant**. Enter or paste the displayed device code. Review the app, address and account, then select **Approve sign-in**. If the deep link fails, open `/pwa-app-studio-connect` on that server in the Companion App, for example via a dashboard button with that navigation path.
-4. Switch back to the web app. It checks for approval automatically. You can also tap **Check approval**. Each code is valid for five minutes and one sign-in. **Sign in in the browser** remains available.
+2. Open the link in your browser or start the installed app. On iPhone or iPad, start from the Home Screen icon to sign in to the installed copy.
+3. Select **Sign in via the Companion App → Open Home Assistant**. Compare the displayed code with the one in your browser, then approve. If a code field appears, enter or paste the code manually. You can also open `/pwa-app-studio-connect` via a dashboard button in the Companion App.
+4. Switch back to the same tab or installed web app. It signs in automatically, or you can tap **Check approval**. Each code is valid for five minutes and one sign-in. **Sign in in the browser** remains available.
 
 The web app gets a separate Home Assistant session with your account's existing permissions. Revoke it in your Home Assistant profile under **Security → Refresh tokens**.
-3. Tap the icon on your home screen to open the app. A standalone web app uses its browser session. If that session is missing, Home Assistant prompts you to sign in.
 
-**Share link** opens your device’s sharing menu. **Copy browser link** gives you the same URL as the QR code.
+**Share link** uses the device share menu where available. In the Android Companion App, the share page can open in your default browser. If your browser has no Web Share support, use its own share menu or **Copy browser link**.
 
 Offline caching covers the app shell, icon and other public files. Cards, current states and device controls need a connection to Home Assistant.
 
@@ -101,7 +101,7 @@ Offline caching covers the app shell, icon and other public files. Cards, curren
 
 - **Access denied.** Check which Home Assistant account is signed in and whether it is selected under **Access**. For guests, also check that the phone is using your internal server address from your home network.
 - **The Companion link stays as text.** Use a dashboard button with the relative path from the designer.
-- **The install option is missing.** Open the browser link in Safari on Apple mobile devices or an install-capable Chromium browser. Check that the HTTPS URL opens without a certificate error.
+- **The install option is missing.** Check whether your browser supports home-screen installation and whether the HTTPS URL opens without a certificate error.
 - **A card is missing.** Check it first in Home Assistant with the same account. If it is a custom card, check that its resource is available to that frontend.
 
 If you are still stuck, include your Core version, Studio version, device and the steps that reproduce the issue. [Report an issue](https://github.com/seb5594/hass-pwa_app_studio-integration/issues) · [Changelog](CHANGELOG.md) · [Architecture notes in German](docs/architekturpruefung.md)

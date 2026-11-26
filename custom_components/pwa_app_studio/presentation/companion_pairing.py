@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from hmac import compare_digest
+import re
 import secrets
 from time import monotonic, time
 
@@ -25,6 +26,7 @@ from ..const import API_BASE_PATH, HTTP_BASE_PATH
 
 _ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 _LIFETIME = 300
+_REFERENCE_PATTERN = re.compile(r"[A-Za-z0-9_-]{24}")
 
 
 @dataclass
@@ -34,6 +36,7 @@ class PairingRequest:
     origin: str
     address: str | None
     secret: str
+    reference: str
     expires_at: float
     approval: tuple[str, str] | None = None
 
@@ -53,6 +56,9 @@ class PairingRequests:
             return None
         return pairing if self.active else None
 
+    def code_for_reference(self, reference: str) -> str | None:
+        return next((code for code, req in self.pending.items() if req.reference == reference), None)
+
     def create(self, app_id: str, slug: str, origin: str, address: str | None) -> tuple[str, PairingRequest]:
         now = monotonic()
         self.pending = {code: req for code, req in self.pending.items() if req.expires_at > now}
@@ -61,7 +67,10 @@ class PairingRequests:
         code = "".join(secrets.choice(_ALPHABET) for _ in range(12))
         while code in self.pending:
             code = "".join(secrets.choice(_ALPHABET) for _ in range(12))
-        pairing = PairingRequest(app_id, slug, origin, address, secrets.token_urlsafe(32), now + _LIFETIME)
+        pairing = PairingRequest(
+            app_id, slug, origin, address, secrets.token_urlsafe(32), secrets.token_urlsafe(18),
+            now + _LIFETIME,
+        )
         self.pending[code] = pairing
         return code, pairing
 
@@ -119,7 +128,10 @@ class CompanionPairingView(HomeAssistantView):
             raise web.HTTPNotFound()
         if not body:
             code, pairing = self._requests.create(app.app_id, app.slug, origin, request.remote)
-            return _reply({"code": code, "secret": pairing.secret, "expires_in": _LIFETIME}, 201)
+            return _reply({
+                "code": code, "secret": pairing.secret, "reference": pairing.reference,
+                "expires_in": _LIFETIME,
+            }, 201)
 
         code = _code(body)
         pairing = self._requests.get(code)
@@ -179,7 +191,18 @@ class CompanionApprovalView(HomeAssistantView):
 
     async def post(self, request: web.Request) -> web.Response:
         _, body = await _read_body(request)
-        pairing = self._requests.get(_code(body))
+        if "reference" in body:
+            reference = body["reference"]
+            if not isinstance(reference, str) or not _REFERENCE_PATTERN.fullmatch(reference):
+                raise web.HTTPBadRequest()
+            code = self._requests.code_for_reference(reference)
+            if not code:
+                raise web.HTTPNotFound()
+            if body.get("confirm") is True and _code(body) != code:
+                raise web.HTTPBadRequest()
+        else:
+            code = _code(body)
+        pairing = self._requests.get(code)
         if not pairing or pairing.approval:
             raise web.HTTPNotFound()
         user = request["hass_user"]
@@ -192,4 +215,6 @@ class CompanionApprovalView(HomeAssistantView):
         if body.get("confirm") is True:
             pairing.approval = (user.id, source_id)
             return _reply({"state": "approved"})
-        return _reply({"name": app.manifest.name, "origin": pairing.origin, "account": user.name})
+        return _reply({
+            "name": app.manifest.name, "origin": pairing.origin, "account": user.name, "code": code,
+        })

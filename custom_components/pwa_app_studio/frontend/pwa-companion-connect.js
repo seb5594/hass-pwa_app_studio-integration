@@ -66,6 +66,7 @@ export function waitForDeviceApproval({ launch, slug, t, passwordLogin, iosBrows
       request.hidden = !pairing;
       if (pairing) {
         request.querySelector("code").textContent = pairing.code.match(/.{1,4}/g).join(" ");
+        request.querySelector("a").href = pairing.reference ? `${COMPANION_URL}/${pairing.reference}` : COMPANION_URL;
         status.textContent = t("pairing_pending");
       }
     };
@@ -117,8 +118,8 @@ export function waitForDeviceApproval({ launch, slug, t, passwordLogin, iosBrows
       try {
         const response = await post({});
         if (!response.ok) throw new Error("Could not start pairing");
-        const { code, secret, expires_in } = await response.json();
-        pairing = { code, secret, deadline: Date.now() + expires_in * 1000 };
+        const { code, secret, reference, expires_in } = await response.json();
+        pairing = { code, secret, reference, deadline: Date.now() + expires_in * 1000 };
         remember();
         showCode();
         controls.querySelector("a").focus();

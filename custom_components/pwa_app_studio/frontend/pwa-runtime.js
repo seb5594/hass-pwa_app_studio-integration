@@ -1,6 +1,6 @@
 /* Standalone PWA runtime hosted at /pwa_app_studio/app/<slug>/ handling SW, IndieAuth PKCE, ACL check, and device install. */
 
-import { chromeBrowserLink } from "./pwa-install.js";
+import { androidBrowserLink, isAndroidWebView } from "./pwa-install.js";
 import { waitForDeviceApproval } from "./pwa-companion-connect.js";
 import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
 
@@ -37,7 +37,7 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
     const ua = navigator.userAgent || "";
     const platform = navigator.userAgentData?.platform || navigator.platform || "";
     const android = /Android/i.test(platform) || /Android/i.test(ua);
-    const embedded = android && (/\bwv\b|Home\s?Assistant/i.test(ua) || Boolean(window.externalApp));
+    const embedded = isAndroidWebView();
     if (!window.isSecureContext) return { hint: t("install_https"), android, embedded };
     if (embedded) return { hint: t("install_webview"), android, embedded };
     if (android) return { hint: t("install_android"), android, embedded };
@@ -258,7 +258,7 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
     const { hint, android, embedded } = installInstructions();
     const installUrl = new URL(basePath, origin);
     installUrl.searchParams.set("auto_install", "1");
-    const chromeUrl = embedded ? chromeBrowserLink(installUrl) : "";
+    const browserUrl = embedded ? androidBrowserLink(installUrl) : "";
 
     const banner = document.createElement("section");
     banner.id = "pwa-install-banner";
@@ -272,7 +272,7 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
       <p>${esc(hint)}</p>
       <div class="install-actions">
         <button id="pwa-install-btn" ${deferredInstallPrompt ? "" : "hidden"}>${esc(t("install_native"))}</button>
-        ${chromeUrl ? `<a href="${esc(chromeUrl)}">${esc(t("install_open_chrome"))}</a>` : ""}
+        ${browserUrl ? `<a href="${esc(browserUrl)}">${esc(t("install_open_browser"))}</a>` : ""}
         ${android ? `<button id="pwa-copy-install-link">${esc(t("browser_copy"))}</button>` : ""}
       </div>
       <input id="pwa-install-url" type="text" aria-label="${esc(t("qr_url"))}" readonly hidden value="${esc(installUrl.href)}" />
@@ -324,26 +324,49 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
     button.textContent = t("browser_share");
     status.after(button);
 
-    const showChromeInstructions = () => {
-      // Chrome's own Share action uses the current address.
+    const showBrowserInstructions = () => {
+      // The browser menu shares the current address.
       history.replaceState(null, "", redirectUri);
       button.hidden = true;
-      status.textContent = t("share_chrome_menu");
+      status.textContent = t("share_browser_menu");
+      const copy = document.createElement("button");
+      copy.type = "button";
+      copy.textContent = t("browser_copy");
+      button.after(copy);
+      const input = document.createElement("input");
+      input.readOnly = true;
+      input.type = "url";
+      input.setAttribute("aria-label", t("qr_url"));
+      input.value = redirectUri;
+      input.hidden = true;
+      copy.after(input);
+      copy.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(redirectUri);
+          status.textContent = t("browser_copied");
+        } catch {
+          input.hidden = false;
+          input.focus();
+          input.select();
+          status.textContent = t("browser_selected");
+        }
+      };
     };
     if (!navigator.share || (navigator.canShare && !navigator.canShare(data))) {
-      showChromeInstructions();
+      showBrowserInstructions();
       return;
     }
     button.onclick = async () => {
       try {
         await navigator.share(data);
       } catch (error) {
-        if (error?.name !== "AbortError") showChromeInstructions();
+        if (error?.name !== "AbortError") showBrowserInstructions();
       }
     };
   }
 
-  if (new URLSearchParams(location.search).get("share_link") === "1") {
+  if (location.pathname === `/pwa_app_studio/share/${slug}` ||
+      new URLSearchParams(location.search).get("share_link") === "1") {
     showSharePage();
     return;
   }
