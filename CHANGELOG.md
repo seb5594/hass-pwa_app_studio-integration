@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.11.26.10
+
+- Let users approve a separate web-app session from an already signed-in Companion App on Android or iOS. Site owners can enable this per web app.
+
 ## 2026.11.26.9
 
 - Add Aurora, Orbit, Light sweep and Soft entrance launch animations with an instant preview and replay in the designer.

@@ -67,6 +67,15 @@ Beim Teilen über den Browser verwendet der Gast-QR-Code die interne Home-Assist
 
 1. Öffne unter **Teilen** auf Android **Zum Installieren in Chrome öffnen**. Wenn dein Handy die Seite in Home Assistant lässt, tippe auf **Browser-Link kopieren**, öffne Chrome als eigene App und füge den Link in dessen Adressleiste ein. Auf anderen Geräten kannst du **Auf diesem Gerät installieren** verwenden. Für die Browser-Installation braucht das Zielgerät eine erreichbare HTTPS-Adresse mit gültigem Zertifikat.
 2. Melde dich bei Home Assistant an, falls der Browser danach fragt. Auf iPhone und iPad öffnest du den Link in Safari und wählst **Teilen → Zum Home-Bildschirm**. Aktiviere **Als Web-App öffnen**, wenn Safari die Option zeigt. Auf Android tippe auf **Jetzt installieren**, wenn Chrome den Dialog anbietet. Sonst öffne das Chrome-Menü **⋮ → Installieren und Verknüpfung erstellen → Installieren**. Die Bezeichnung kann je nach Chrome-Version abweichen. Am Computer verwendest du die Installationsoption deines Browsers, sofern er sie anbietet. [Anleitung von Apple](https://support.apple.com/de-de/guide/iphone/iphea86e5236/ios) · [Anleitung für Chrome](https://support.google.com/chrome/answer/9658361?hl=de)
+
+### Die Web-App über die Companion-App freigeben
+
+1. Öffne im Studio die gespeicherte App, aktiviere **Zugriff → Anmeldung über die Companion-App erlauben** und speichere. Verwende HTTPS für die Web-App und in der Companion-App. Wähle in beiden denselben Home-Assistant-Server.
+2. Öffne auf Android den Browser-Link in Chrome oder starte die installierte App. Füge die App auf dem iPhone oder iPad zuerst in Safari zum Home-Bildschirm hinzu und öffne sie dann über ihr App-Symbol.
+3. Wähle **Über die Companion-App anmelden → Home Assistant öffnen**. Gib den angezeigten Gerätecode ein oder füge ihn ein. Prüfe App, Adresse und Konto und tippe auf **Anmeldung freigeben**. Falls der Link die Companion-App nicht öffnet, kannst du dort über eine Dashboard-Schaltfläche mit dem Navigationspfad `/pwa-app-studio-connect` direkt zur Freigabe springen.
+4. Wechsle zurück zur Web-App. Sie prüft die Freigabe automatisch. Du kannst auch auf **Freigabe prüfen** tippen. Jeder Code gilt fünf Minuten und für eine Anmeldung. **Im Browser anmelden** bleibt verfügbar.
+
+Die Web-App bekommt eine eigene Home-Assistant-Sitzung mit den Rechten deines Kontos. Du kannst sie im Home-Assistant-Profil unter **Sicherheit → Aktualisierungstoken** widerrufen.
 3. Öffne die App über das Symbol auf dem Startbildschirm. Die eigenständig installierte App verwendet ihre Browsersitzung. Wenn dort noch keine Sitzung vorhanden ist, zeigt Home Assistant die Anmeldung an.
 
 Mit **Link teilen** öffnest du das Teilen-Menü deines Geräts. **Browser-Link kopieren** gibt dir dieselbe URL wie der QR-Code zum Einfügen.

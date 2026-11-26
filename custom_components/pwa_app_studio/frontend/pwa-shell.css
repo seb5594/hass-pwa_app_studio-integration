@@ -89,6 +89,13 @@ footer {
 footer a { display: inline-block; padding: 4px; color: #dce5f3; font-size: .75rem; line-height: 1.5; text-underline-offset: 3px; }
 button { min-height: 44px; cursor: pointer; font: inherit; }
 .launch button { padding: .5rem 1rem; border: 0; border-radius: 2rem; background: #edf2ff; color: #182133; font-weight: 600; }
+.companion-connect button, .companion-connect a { margin:4px; }
+.companion-connect button:not([data-start]) {
+  color:#edf2ff; background:#ffffff12; border:1px solid #ffffff50;
+}
+.companion-connect code { font-size:clamp(1rem, 5vw, 1.5rem); font-weight:700; letter-spacing:.08em; }
+.companion-open { display:inline-flex; align-items:center; min-height:44px; padding:.5rem 1rem; border-radius:2rem;
+  background:#edf2ff; color:#182133; text-decoration:none; font-weight:600; }
 :focus-visible { outline: 3px solid #facc15; outline-offset: 2px; }
 
 .install-banner {

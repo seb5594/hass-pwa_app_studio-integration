@@ -398,6 +398,7 @@ class PwaAccessPolicy:
     allowed_user_ids: list[str] = field(default_factory=list)
     require_admin: bool = False
     local_guests: bool = False
+    allow_companion_pairing: bool = False
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> PwaAccessPolicy:
@@ -407,6 +408,7 @@ class PwaAccessPolicy:
             allowed_user_ids=list(dict.fromkeys(users)),
             local_guests=bool(data.get("local_guests", False)),
             require_admin=bool(data.get("require_admin", False)),
+            allow_companion_pairing=data.get("allow_companion_pairing") is True,
         )
 
     def is_user_allowed(self, user_id: str, is_admin: bool, local_only: bool = False) -> bool:
@@ -426,6 +428,7 @@ class PwaAccessPolicy:
             "allowed_user_ids": self.allowed_user_ids,
             "local_guests": self.local_guests,
             "require_admin": self.require_admin,
+            "allow_companion_pairing": self.allow_companion_pairing,
         }
 
 

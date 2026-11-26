@@ -1,6 +1,7 @@
 /* Standalone PWA runtime hosted at /pwa_app_studio/app/<slug>/ handling SW, IndieAuth PKCE, ACL check, and device install. */
 
 import { chromeInstallLink } from "./pwa-install.js";
+import { waitForDeviceApproval } from "./pwa-companion-connect.js";
 import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
 
 (async () => {
@@ -23,6 +24,11 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
   const pkceStateKey = `pwa_app_studio_state_${slug}`;
   const pkceInstallKey = `pwa_app_studio_install_${slug}`;
   const wantsInstall = () => new URLSearchParams(location.search).get("auto_install") === "1";
+  const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (/Mac/i.test(navigator.platform) && navigator.maxTouchPoints > 1);
+  const isStandalone = () => navigator.standalone === true ||
+    ["standalone", "fullscreen", "minimal-ui", "window-controls-overlay"]
+      .some(mode => window.matchMedia(`(display-mode: ${mode})`).matches);
 
   let deferredInstallPrompt = null;
   let installBannerDismissed = false;
@@ -35,7 +41,7 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
     if (!window.isSecureContext) return { hint: t("install_https"), android, embedded };
     if (embedded) return { hint: t("install_webview"), android, embedded };
     if (android) return { hint: t("install_android"), android, embedded };
-    if (/iPhone|iPad|iPod/i.test(ua) || (/Mac/i.test(platform) && navigator.maxTouchPoints > 1)) {
+    if (isIos) {
       return { hint: t("install_ios"), android, embedded };
     }
     const safari = /Mac/i.test(platform) && /Safari/i.test(ua) && !/Chrome|Edg/i.test(ua);
@@ -96,6 +102,20 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
     localStorage.setItem("hassTokens", JSON.stringify(tokens));
   }
 
+  function saveNewSession(tokenData) {
+    const tokens = {
+      hassUrl: origin,
+      clientId,
+      expires: Date.now() + (tokenData.expires_in || 1800) * 1000,
+      access_token: tokenData.access_token,
+      refresh_token: tokenData.refresh_token,
+      token_type: tokenData.token_type || "Bearer",
+      ha_auth_provider: tokenData.ha_auth_provider,
+    };
+    saveStoredTokens(tokens);
+    return tokens;
+  }
+
   async function startOAuthFlow() {
     const state = randomString(24);
     sessionStorage.setItem(pkceStateKey, state);
@@ -148,17 +168,7 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
     if (!resp.ok) {
       throw new Error("OAuth Token-Austausch fehlgeschlagen.");
     }
-    const tokenData = await resp.json();
-    const stored = {
-      hassUrl: origin,
-      clientId,
-      expires: Date.now() + (tokenData.expires_in || 1800) * 1000,
-      access_token: tokenData.access_token,
-      refresh_token: tokenData.refresh_token,
-      token_type: tokenData.token_type || "Bearer",
-      ha_auth_provider: tokenData.ha_auth_provider,
-    };
-    saveStoredTokens(stored);
+    const stored = saveNewSession(await resp.json());
     sessionStorage.removeItem(pkceVerifierKey);
     sessionStorage.removeItem(pkceStateKey);
     if (sessionStorage.getItem(pkceInstallKey) === "1") {
@@ -199,14 +209,25 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
     let tokens = await exchangeCodeIfPresent();
     if (!tokens) tokens = readStoredTokens();
     if (!tokens?.access_token) {
-      await startOAuthFlow();
-      return null;
+      return signIn();
     }
     if (tokens.expires && Date.now() > tokens.expires - 60000) {
       const refreshed = await refreshAccessToken(tokens);
       if (refreshed) tokens = refreshed;
     }
     return tokens;
+  }
+
+  async function signIn() {
+    if (root.dataset.companionPairing !== "true" || !window.isSecureContext) {
+      await startOAuthFlow();
+      return null;
+    }
+    return saveNewSession(await waitForDeviceApproval({
+      launch, slug, t,
+      passwordLogin: startOAuthFlow,
+      iosBrowser: isIos && !isStandalone(),
+    }));
   }
 
   function esc(val) {
@@ -232,8 +253,7 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
 
   function renderInstallBannerIfWanted() {
     if (!wantsInstall() || installBannerDismissed || document.getElementById("pwa-install-banner")) return;
-    if (navigator.standalone === true || ["standalone", "fullscreen", "minimal-ui", "window-controls-overlay"]
-      .some(mode => window.matchMedia(`(display-mode: ${mode})`).matches)) return;
+    if (isStandalone()) return;
 
     const { hint, android, embedded } = installInstructions();
     const installUrl = new URL(basePath, origin);
@@ -301,21 +321,21 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
     let tokens = await ensureAuthenticatedTokens();
     if (!tokens) return;
 
-    let runtimeResp = await fetch(`/api/pwa_app_studio/runtime/${encodeURIComponent(slug)}`, {
+    const getRuntime = (tokens) => fetch(`/api/pwa_app_studio/runtime/${encodeURIComponent(slug)}`, {
       headers: { Authorization: `Bearer ${tokens.access_token}` },
     });
+    let runtimeResp = await getRuntime(tokens);
 
     if (runtimeResp.status === 401) {
       const refreshed = await refreshAccessToken(tokens);
       if (refreshed) {
         tokens = refreshed;
-        runtimeResp = await fetch(`/api/pwa_app_studio/runtime/${encodeURIComponent(slug)}`, {
-          headers: { Authorization: `Bearer ${tokens.access_token}` },
-        });
+        runtimeResp = await getRuntime(tokens);
       }
       if (runtimeResp.status === 401) {
-        await startOAuthFlow();
-        return;
+        tokens = await signIn();
+        if (!tokens) return;
+        runtimeResp = await getRuntime(tokens);
       }
     }
 

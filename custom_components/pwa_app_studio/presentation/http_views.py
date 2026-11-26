@@ -63,6 +63,7 @@ class PwaAppShellView(HomeAssistantView):
        data-base="{base}/"
        data-sw-url="{base}/sw.js?v={ver}"
        data-client-url="{base}/client"
+       data-companion-pairing="{str(app.access.allow_companion_pairing).lower()}"
        data-theme="{escaped_theme}"
        data-bg="{escaped_bg}">
     <main class="launch" data-style="{app.manifest.launch_style}">
@@ -137,6 +138,7 @@ class PwaServiceWorkerView(HomeAssistantView):
                 f"{base}/icon-maskable-512.png?v={app.version}",
                 f"{STATIC_URL_PATH}/pwa-shell.css",
                 f"{STATIC_URL_PATH}/pwa-runtime.js",
+                f"{STATIC_URL_PATH}/pwa-companion-connect.js",
                 f"{STATIC_URL_PATH}/pwa-install.js",
                 f"{STATIC_URL_PATH}/pwa-studio-i18n.js",
             ]

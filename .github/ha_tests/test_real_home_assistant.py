@@ -5,6 +5,7 @@ engine installs both for every release the Compatibility workflow lists; to run 
 locally: python .engine/.scripts/ha_matrix.py run 2026.9.4
 """
 
+import json
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
@@ -144,6 +145,66 @@ async def test_shell_launch_settings_and_footer(studio, launch_style):
     assert "Made with ❤️ in Germany 🇩🇪" in shell
     assert 'href="https://github.com/seb5594"' in shell
     assert "user-scalable=no" not in shell
+
+
+async def test_companion_approval_requires_app_access_and_device_proof(hass, studio):
+    from aiohttp import web
+    from homeassistant.auth.models import TOKEN_TYPE_NORMAL
+    from homeassistant.components.http.const import KEY_HASS_REFRESH_TOKEN_ID
+
+    from custom_components.pwa_app_studio.presentation.companion_pairing import (
+        CompanionApprovalView,
+        CompanionPairingView,
+    )
+
+    def request(body):
+        req = make_mocked_request("POST", "/", headers={
+            "Host": "localhost",
+            "Origin": "http://localhost",
+            "Content-Type": "application/json",
+            "Content-Length": "100",
+        })
+        req.json = AsyncMock(return_value=body)
+        return req
+
+    app = await studio.async_create_app({"slug": "pairing"})
+    pending = hass.data[DOMAIN]["runtime"].pairing_requests
+    device = CompanionPairingView(hass, pending)
+    approval = CompanionApprovalView(hass, pending)
+    with pytest.raises(web.HTTPNotFound):
+        await device.post(request({}), app.slug)
+    app = await studio.async_update_app(app.app_id, {"access": {
+        "allow_companion_pairing": True, "allow_all_authenticated": False, "allowed_user_ids": ["allowed"],
+    }})
+    grant = await device.post(request({}), app.slug)
+    data = json.loads(grant.text)
+    code = data["code"]
+    assert grant.headers["Cache-Control"] == "no-store"
+    assert (await device.post(request({"code": code, "secret": data["secret"]}), app.slug)).status == 202
+    with pytest.raises(web.HTTPNotFound):
+        await device.post(request({"code": code, "secret": "wrong"}), app.slug)
+
+    confirm = request({"code": code, "confirm": True})
+    confirm[KEY_HASS_REFRESH_TOKEN_ID] = "signed-in"
+    confirm["hass_user"] = SimpleNamespace(
+        id="unlisted", is_admin=False, local_only=False, is_active=True, system_generated=False,
+        refresh_tokens={"signed-in": SimpleNamespace(token_type=TOKEN_TYPE_NORMAL, credential=object())},
+    )
+    with pytest.raises(web.HTTPForbidden):
+        await approval.post(confirm)
+    confirm["hass_user"].id = "allowed"
+    assert (await approval.post(confirm)).status == 200
+    with pytest.raises(web.HTTPNotFound):
+        await approval.post(confirm)
+    with pytest.raises(web.HTTPForbidden):
+        # The approving source session no longer exists at redemption.
+        await device.post(request({"code": code, "secret": data["secret"]}), app.slug)
+    with pytest.raises(web.HTTPNotFound):
+        await device.post(request({"code": code, "secret": data["secret"]}), app.slug)
+    expired = json.loads((await device.post(request({}), app.slug)).text)
+    pending.pending[expired["code"]].expires_at = 0
+    with pytest.raises(web.HTTPNotFound):
+        await device.post(request(expired), app.slug)
 
 
 async def test_share_qr_is_scalable_and_high_contrast(hass):

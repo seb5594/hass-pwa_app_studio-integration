@@ -1375,6 +1375,9 @@ class PwaAppStudioPanel extends HTMLElement {
                 ${d.access.allowed_user_ids.includes(u.id) ? "checked" : ""} />${this._esc(u.name)}</label>`).join("") || `<p>${this._t("no_accounts")}</p>`}
             </fieldset>` : ""}
           <p>${this._t("admin_access")}</p>
+          <label class="access-user"><input type="checkbox" id="a-companion-pairing"
+            ${d.access.allow_companion_pairing ? "checked" : ""} />${this._t("pairing_setting")}</label>
+          <p>${this._t("pairing_setting_hint")}</p>
         </div>
       `;
     }
@@ -1748,6 +1751,7 @@ class PwaAppStudioPanel extends HTMLElement {
       this._renderDevicePreviewCards();
       sr.getElementById("access-mode").focus();
     });
+    bindChk("a-companion-pairing", value => { this._draft.access.allow_companion_pairing = value; });
     sr.getElementById("reload-users")?.addEventListener("click", async () => {
       try {
         const result = await this._hass.callWS({ type: "pwa_app_studio/users/list" });

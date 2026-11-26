@@ -19,6 +19,8 @@ from .application.services import (
 )
 from .const import (
     CONF_SHOW_IN_SIDEBAR,
+    CONNECT_PANEL_URL_PATH,
+    CONNECT_WEBCOMPONENT,
     DEFAULT_SHOW_IN_SIDEBAR,
     DEFAULT_SIDEBAR_ICON,
     DEFAULT_SIDEBAR_TITLE,
@@ -34,6 +36,7 @@ from .infrastructure.icon_renderer import PillowIconComposer
 from .infrastructure.lovelace_adapter import HaLovelaceAdapter, HaUserDirectoryAdapter
 from .infrastructure.qr_generator import SegnoQrGenerator
 from .infrastructure.storage_repository import HaStorageAppRepository
+from .presentation.companion_pairing import CompanionApprovalView, CompanionPairingView, PairingRequests
 from .presentation.http_views import async_register_http_views
 from .presentation.websocket_api import async_register_websocket_commands
 
@@ -48,6 +51,7 @@ class PwaAppStudioRuntimeData:
     icon_composer: PillowIconComposer
     lovelace_adapter: HaLovelaceAdapter
     user_directory: HaUserDirectoryAdapter
+    pairing_requests: PairingRequests
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -79,6 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             icon_composer=icon_composer,
             lovelace_adapter=lovelace_adapter,
             user_directory=user_directory,
+            pairing_requests=PairingRequests(app_service),
         )
         domain_store["runtime"] = runtime
 
@@ -98,6 +103,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             manifest_builder=manifest_builder,
             icon_composer=icon_composer,
         )
+        hass.http.register_view(CompanionPairingView(hass, runtime.pairing_requests))
+        hass.http.register_view(CompanionApprovalView(hass, runtime.pairing_requests))
         async_register_websocket_commands(
             hass=hass,
             app_service=app_service,
@@ -108,6 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         domain_store["initialized"] = True
 
     await _async_register_panels(hass, entry)
+    domain_store["runtime"].pairing_requests.active = True
     if hasattr(hass.config_entries, "async_forward_entry_setups"):
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     else:
@@ -129,6 +137,7 @@ async def _async_register_panels(hass: HomeAssistant, entry: ConfigEntry) -> Non
 
     _remove_panel_if_exists(hass, PANEL_URL_PATH)
     _remove_panel_if_exists(hass, RUNNER_PANEL_URL_PATH)
+    _remove_panel_if_exists(hass, CONNECT_PANEL_URL_PATH)
 
     panel_options = {}
     if "handle_safe_area" in signature(panel_custom.async_register_panel).parameters:
@@ -161,6 +170,18 @@ async def _async_register_panels(hass: HomeAssistant, entry: ConfigEntry) -> Non
         config={},
         **panel_options,
     )
+    await panel_custom.async_register_panel(
+        hass=hass,
+        webcomponent_name=CONNECT_WEBCOMPONENT,
+        frontend_url_path=CONNECT_PANEL_URL_PATH,
+        sidebar_title=None,
+        sidebar_icon=None,
+        module_url=f"{STATIC_URL_PATH}/pwa-app-studio-connect-panel.js",
+        embed_iframe=False,
+        require_admin=False,
+        config={},
+        **panel_options,
+    )
 
 
 def _remove_panel_if_exists(hass: HomeAssistant, url_path: str) -> None:
@@ -171,6 +192,10 @@ def _remove_panel_if_exists(hass: HomeAssistant, url_path: str) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    requests = hass.data[DOMAIN]["runtime"].pairing_requests
+    requests.active = False
+    requests.pending.clear()
     _remove_panel_if_exists(hass, PANEL_URL_PATH)
     _remove_panel_if_exists(hass, RUNNER_PANEL_URL_PATH)
+    _remove_panel_if_exists(hass, CONNECT_PANEL_URL_PATH)
     return unload_ok
