@@ -12,9 +12,17 @@ import pytest
 pytest.importorskip("pytest_homeassistant_custom_component")
 
 from homeassistant.config_entries import ConfigEntryState  # noqa: E402
+from homeassistant.setup import async_setup_component  # noqa: E402
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # noqa: E402
 
 DOMAIN = next((Path(__file__).resolve().parents[2] / "custom_components").iterdir()).name
+
+
+@pytest.fixture(autouse=True)
+async def _real_home_assistant(verify_cleanup, enable_custom_integrations, disable_http_server, hass):
+    """Load real frontend dependencies instead of marking them as loaded."""
+    assert await async_setup_component(hass, "panel_custom", {})
+    assert await async_setup_component(hass, "lovelace", {})
 
 
 async def test_user_flow_creates_the_single_entry_and_refuses_a_second(hass):
