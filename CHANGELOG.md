@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.11.26.4
+
+- Give the designer and new web apps a blue accent, with each app's selected color applied to its view navigation.
+
 ## 2026.11.26.3
 
 - Give the studio designer its own logo and make the Companion link easy to copy.

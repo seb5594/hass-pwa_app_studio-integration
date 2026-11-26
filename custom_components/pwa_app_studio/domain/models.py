@@ -10,6 +10,7 @@ from typing import Any
 import uuid
 
 SLUG_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]{1,48}$")
+DEFAULT_ACCENT = "#2563eb"
 HEX_COLOR_PATTERN = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
@@ -160,7 +161,7 @@ class PwaIconSpec:
     mdi_icon: str = "mdi:home-assistant"
     icon_svg_path: str = ""
     icon_color: str = "#ffffff"
-    bg_color: str = "#03a9f4"
+    bg_color: str = DEFAULT_ACCENT
     badge_icon: str = "mdi:lightbulb"
     badge_svg_path: str = ""
     badge_color: str = "#ffffff"
@@ -194,7 +195,7 @@ class PwaIconSpec:
             mdi_icon=str(data.get("mdi_icon") or "mdi:home-assistant").strip(),
             icon_svg_path=str(data.get("icon_svg_path") or "").strip(),
             icon_color=normalize_hex_color(data.get("icon_color"), "#ffffff"),
-            bg_color=normalize_hex_color(data.get("bg_color"), "#03a9f4"),
+            bg_color=normalize_hex_color(data.get("bg_color"), DEFAULT_ACCENT),
             badge_icon=str(data.get("badge_icon") or "mdi:lightbulb").strip(),
             badge_svg_path=str(data.get("badge_svg_path") or "").strip(),
             badge_color=normalize_hex_color(data.get("badge_color"), "#ffffff"),
@@ -234,7 +235,7 @@ class PwaManifestOptions:
     description: str = "Home Assistant Progressive Web App"
     display: DisplayMode = DisplayMode.STANDALONE
     orientation: OrientationMode = OrientationMode.ANY
-    theme_color: str = "#03a9f4"
+    theme_color: str = DEFAULT_ACCENT
     background_color: str = "#111827"
     lang: str = "de"
     text_dir: str = "ltr"
@@ -286,7 +287,7 @@ class PwaManifestOptions:
             description=str(data.get("description") or "").strip()[:240],
             display=display,
             orientation=orientation,
-            theme_color=normalize_hex_color(data.get("theme_color"), "#03a9f4"),
+            theme_color=normalize_hex_color(data.get("theme_color"), DEFAULT_ACCENT),
             background_color=normalize_hex_color(data.get("background_color"), "#111827"),
             lang=str(data.get("lang") or "de").strip()[:12],
             text_dir=text_dir,

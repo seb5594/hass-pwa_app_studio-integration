@@ -4,7 +4,7 @@ Stand 2026.11.26.1
 
 | Bereich | Ablauf und Befund |
 | --- | --- |
-| Einrichtung | Home Assistant registriert einen Admin-Designer und eine ausgeblendete Laufzeitansicht. Die Integration übernimmt die Akzentfarbe für neue Entwürfe. Fünf Schritte führen von Namen und Farben über Inhalt und Symbol bis zur Freigabe. |
+| Einrichtung | Home Assistant registriert einen Admin-Designer und eine ausgeblendete Laufzeitansicht. Der Designer und neue Entwürfe verwenden Blau als Akzentfarbe. Jede App kann eine eigene Akzentfarbe erhalten. Fünf Schritte führen von Namen und Farben über Inhalt und Symbol bis zur Freigabe. |
 | Domäne und Speicherung | Manifest, Inhalt, Icon und Freigabe werden als App-Modell abgelegt. Der Anwendungsdienst serialisiert Schreiboperationen. Geänderte Objekte werden erst nach erfolgreichem Speichern aktiv. Vorhandene Apps laden mit bisherigen Berechtigungen und einem Standard-Startstil. |
 | Veröffentlichung | App-Hülle, Installationsmanifest und Icon sind öffentlich adressierbar. Interna wie Karten und Benutzerliste laufen über die angemeldeten Schnittstellen. Der Release-Prozess packt die Integration als HACS-ZIP und setzt stabile Releases explizit als Latest. |
 | Öffnen | Die Hülle zeigt auf dem ersten Bild App-Symbol, Startstil und Versionsfooter. Die Laufzeit prüft die bestehende Sitzung und öffnet den Home-Assistant-Runner. Der Runner prüft seine Freigabe über die WebSocket-Verbindung und lädt die Karten mit Home Assistants Lovelace-Helpern. Die Companion-Verknüpfung öffnet diesen Runner direkt in der vorhandenen Sitzung. Beim Direktstart lädt das Studio zuerst Home Assistants Lovelace-Modul, damit auch ein frisch geöffnetes Browserfenster Karten darstellen kann. |

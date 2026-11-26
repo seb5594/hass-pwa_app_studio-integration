@@ -2,6 +2,7 @@
 
 import { loadPwaCardHelpers } from "./pwa-card-helpers.js";
 
+const STUDIO_ACCENT = "#2563eb";
 const STUDIO_LOGO = new URL("./studio-logo.png", import.meta.url).href;
 
 const STEPS = [
@@ -207,7 +208,6 @@ class PwaAppStudioPanel extends HTMLElement {
       const rgb = canvas.getImageData(0, 0, 1, 1).data.slice(0, 3);
       return "#" + Array.from(rgb, n => n.toString(16).padStart(2, "0")).join("");
     }
-    const accent = themeColor(["--accent-color", "--primary-color"], "#03a9f4");
     const firstDash = this._dashboards[0]?.url_path || "lovelace";
     return {
       app_id: null,
@@ -218,7 +218,7 @@ class PwaAppStudioPanel extends HTMLElement {
         description: "Maßgeschneiderte Home Assistant PWA",
         display: "standalone",
         orientation: "any",
-        theme_color: accent,
+        theme_color: STUDIO_ACCENT,
         background_color: themeColor(["--primary-background-color"], "#111827"),
         lang: "de",
         dir: "ltr",
@@ -245,7 +245,7 @@ class PwaAppStudioPanel extends HTMLElement {
         mdi_icon: "mdi:home-assistant",
         icon_svg_path: "",
         icon_color: "#ffffff",
-        bg_color: accent,
+        bg_color: STUDIO_ACCENT,
         badge_icon: "mdi:lightbulb",
         badge_svg_path: "",
         badge_color: "#ffffff",
@@ -724,8 +724,8 @@ class PwaAppStudioPanel extends HTMLElement {
           background: rgba(255,255,255,0.02);
         }
         .app-item.active {
-          border-color: var(--accent-color, var(--primary-color, #03a9f4));
-          background: rgba(3, 169, 244, 0.14);
+          border-color: var(--studio-accent);
+          background: color-mix(in srgb, var(--studio-accent) 14%, transparent);
         }
         .editor-pane {
           padding: 16px;
@@ -757,7 +757,7 @@ class PwaAppStudioPanel extends HTMLElement {
           font-size: 13px;
         }
         .tab.active {
-          background: var(--accent-color, var(--primary-color, #03a9f4));
+          background: var(--studio-accent);
           color: #fff;
           border-color: transparent;
         }
@@ -815,7 +815,7 @@ class PwaAppStudioPanel extends HTMLElement {
           font-weight: 500;
         }
         .btn.primary {
-          background: var(--accent-color, var(--primary-color, #03a9f4));
+          background: var(--studio-accent);
           color: #fff;
           border-color: transparent;
         }
@@ -898,14 +898,11 @@ class PwaAppStudioPanel extends HTMLElement {
           margin-bottom: 10px;
           font-size: 13px;
         }
-        :host {height:100dvh;max-height:100%;min-height:0;--studio-accent:var(--accent-color,var(--primary-color,#03a9f4));}
+        :host {height:100dvh;max-height:100%;min-height:0;--studio-accent:${STUDIO_ACCENT};}
         .mobile-nav {display:none}
         .topbar {background:var(--card-background-color);color:var(--primary-text-color)}
         .topbar button,.step-actions button { font-size:.875rem; }
-        .btn.primary,.tab.active { background:color-mix(in srgb,var(--studio-accent) 56%,#111827); color:white; }
-        @supports (color:contrast-color(red)) {
-          .btn.primary,.tab.active { background:var(--studio-accent); color:contrast-color(var(--studio-accent)); }
-        }
+        input[type=checkbox] { accent-color:var(--studio-accent); }
         .topbar button,.device-toolbar button {min-height:44px;white-space:nowrap;border-radius:22px}
         .card-box {border-radius:20px;padding:clamp(14px,2vw,24px)}
         button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible {outline:3px solid var(--studio-accent);outline-offset:2px}

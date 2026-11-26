@@ -184,6 +184,8 @@ class PwaAppStudioRunnerPanel extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
+          --app-accent: ${this._esc(manifest.theme_color || "#2563eb")};
+          --app-accent-ink: #fff;
           display: block;
           min-height: 100vh;
           background: var(--primary-background-color, #111827);
@@ -196,8 +198,8 @@ class PwaAppStudioRunnerPanel extends HTMLElement {
           align-items: center;
           justify-content: space-between;
           padding: 12px 16px;
-          background: ${this._esc(manifest.theme_color || "var(--app-header-background-color, #03a9f4)")};
-          color: #ffffff;
+          background: var(--app-accent);
+          color: var(--app-accent-ink);
           position: sticky;
           top: 0;
           z-index: 10;
@@ -225,9 +227,12 @@ class PwaAppStudioRunnerPanel extends HTMLElement {
           white-space: nowrap;
         }
         .tab-btn.active {
-          background: var(--primary-color, #03a9f4);
-          color: #ffffff;
+          background: var(--app-accent);
+          color: var(--app-accent-ink);
           border-color: transparent;
+        }
+        @supports (color:contrast-color(red)) {
+          :host { --app-accent-ink: contrast-color(var(--app-accent)); }
         }
         #cards-stage {
           display: grid;
