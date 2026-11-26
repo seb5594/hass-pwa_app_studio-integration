@@ -7,6 +7,11 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+
+try:
+    from homeassistant.components.http.auth_util import async_user_not_allowed_do_auth
+except ImportError:
+    from homeassistant.components.http.auth import async_user_not_allowed_do_auth
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from ..application.services import DistributionService, PwaAppService
@@ -167,7 +172,7 @@ def async_register_websocket_commands(
             connection.send_error(msg["id"], "not_found", "PWA app not found.")
             return
         user = connection.user
-        if not user.is_active or not app_service.can_user_access(
+        if async_user_not_allowed_do_auth(hass, user) or not app_service.can_user_access(
             app, user.id, user.is_admin, user.local_only
         ):
             connection.send_error(

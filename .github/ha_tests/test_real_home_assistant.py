@@ -13,6 +13,7 @@ import pytest
 
 pytest.importorskip("pytest_homeassistant_custom_component")
 
+from homeassistant.components import http  # noqa: E402
 from homeassistant.config_entries import ConfigEntryState  # noqa: E402
 from homeassistant.setup import async_setup_component  # noqa: E402
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # noqa: E402
@@ -21,8 +22,14 @@ DOMAIN = next((Path(__file__).resolve().parents[2] / "custom_components").iterdi
 
 
 @pytest.fixture(autouse=True)
-async def _real_home_assistant(verify_cleanup, enable_custom_integrations, disable_http_server, hass):
+async def _real_home_assistant(verify_cleanup, enable_custom_integrations, hass, monkeypatch):
     """Load real frontend dependencies instead of marking them as loaded."""
+    monkeypatch.setattr(http.HomeAssistantHTTP, "start", AsyncMock())
+    monkeypatch.setattr(http.HomeAssistantHTTP, "stop", AsyncMock())
+    if hasattr(http.HomeAssistantHTTP, "async_bind"):
+        monkeypatch.setattr(http.HomeAssistantHTTP, "async_bind", AsyncMock())
+    if hasattr(http, "async_get_source_ip"):
+        monkeypatch.setattr(http, "async_get_source_ip", AsyncMock(return_value="127.0.0.1"))
     assert await async_setup_component(hass, "panel_custom", {})
     assert await async_setup_component(hass, "lovelace", {})
 
@@ -41,9 +48,29 @@ async def test_entry_loads_and_unloads(hass):
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
+    assert any("pwa" in state.entity_id for state in hass.states.async_all("button"))
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_sidebar_option_reloads_panel(hass):
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    panels = hass.data["frontend_panels"]
+    assert panels["pwa-app-studio"].sidebar_title == "PWA Web-App Studio"
+    flow = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        flow["flow_id"], {"show_in_sidebar": False}
+    )
+    assert result["type"] == "create_entry"
+    await hass.async_block_till_done()
+    assert panels["pwa-app-studio"].sidebar_title is None
+    assert "pwa-app-studio-runner" in panels
+
 
 @pytest.fixture
 async def studio(hass):

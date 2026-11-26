@@ -1,4 +1,4 @@
-'''ConfigFlow and OptionsFlowWithReload for PWA Web-App Studio.'''
+'''Configuration and sidebar options for PWA Web-App Studio.'''
 
 from __future__ import annotations
 
@@ -8,8 +8,7 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlowWithReload,
+    OptionsFlow,
 )
 from homeassistant.core import callback
 
@@ -38,7 +37,7 @@ class PwaAppStudioConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> dict[str, Any]:
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
@@ -57,19 +56,22 @@ class PwaAppStudioConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> PwaAppStudioOptionsFlow:
-        return PwaAppStudioOptionsFlow()
+        return PwaAppStudioOptionsFlow(config_entry)
 
 
-class PwaAppStudioOptionsFlow(OptionsFlowWithReload):
-    '''Options flow that automatically reloads the integration on save.'''
+class PwaAppStudioOptionsFlow(OptionsFlow):
+    """Store the sidebar option. The config entry listener applies it."""
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        self._entry = entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> dict[str, Any]:
         if user_input is not None:
-            return self.async_create_entry(data=user_input)
+            return self.async_create_entry(title="", data=user_input)
 
-        current = {**self.config_entry.data, **self.config_entry.options}
+        current = {**self._entry.data, **self._entry.options}
         return self.async_show_form(
             step_id="init",
             data_schema=_build_schema(current),

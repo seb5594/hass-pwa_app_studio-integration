@@ -3,7 +3,7 @@
 
 <p align="center">
   <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=seb5594&amp;repository=hass-pwa_app_studio-integration&amp;category=integration"><img src="https://img.shields.io/static/v1?label=HACS%20%C2%B7%20Marketplace&amp;message=Add%20integration&amp;color=41BDF5&amp;logo=homeassistantcommunitystore&amp;logoColor=white&amp;style=for-the-badge" alt="HACS · Marketplace" height="28"></a>
-  <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/actions/workflows/compat.yml"><img src="https://img.shields.io/static/v1?label=home%20assistant&amp;message=%E2%89%A5%202026.9.0&amp;color=1877A5&amp;style=for-the-badge" alt="home assistant" height="28"></a><br>
+  <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/actions/workflows/compat.yml"><img src="https://img.shields.io/static/v1?label=home%20assistant&amp;message=%E2%89%A5%202021.12.0&amp;color=1877A5&amp;style=for-the-badge" alt="home assistant" height="28"></a><br>
   <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/releases/tag/2026.11.26.1"><img src="https://img.shields.io/static/v1?label=integration%20version&amp;message=2026.11.26.1&amp;color=1877A5&amp;style=for-the-badge" alt="integration version" height="28"></a>
   <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/releases"><img src="https://img.shields.io/github/downloads/seb5594/hass-pwa_app_studio-integration/2026.11.26.1/total?label=downloads&amp;color=1877A5&amp;style=for-the-badge" alt="downloads" height="28"></a><br>
   <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/seb5594/hass-pwa_app_studio-integration/ci.yml?branch=main&amp;label=checks&amp;style=flat" alt="checks" height="20"></a>
@@ -32,7 +32,7 @@ The app uses the signed-in Home Assistant account. Dashboard access still depend
 
 The five-step designer previews the app’s launch screen and offers three motion styles. Choose **Guests on the home network** to share an app with selected local-only, non-admin Home Assistant accounts through the internal URL. The companion link opens the app in the active Home Assistant session. A standalone installation reuses the session available to its browser context and signs in through Home Assistant when needed.
 
-Minimum Home Assistant Core version: **2026.9.0**.
+Minimum Home Assistant Core version: **2021.12.0**. Core versions before 2022.11 offer a button card in place of the Tile preset. Installing a PWA needs a current browser.
 
 [Architectural review (German)](docs/architekturpruefung.md)
 

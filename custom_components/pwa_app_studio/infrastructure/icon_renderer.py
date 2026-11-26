@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from ..domain.models import BadgePosition, IconMode, PwaIconSpec
 
 _LOGGER = logging.getLogger(__name__)
+_LANCZOS = getattr(Image, "Resampling", Image).LANCZOS
 
 # Built-in fallback SVG 24x24 paths for common dashboard / MDI icons
 BUILTIN_MDI_PATHS: dict[str, str] = {
@@ -412,7 +413,7 @@ class PillowIconComposer:
         if maskable:
             pad_ratio = max(0.08, spec.maskable_padding_pct / 100.0)
             inner_size = max(16, int(size * (1.0 - 2.0 * pad_ratio)))
-            inner = base_img.resize((inner_size, inner_size), Image.Resampling.LANCZOS)
+            inner = base_img.resize((inner_size, inner_size), _LANCZOS)
             bg_fill = Image.new("RGBA", (size, size), _hex_to_rgba(spec.bg_color, 255))
             offset = (size - inner_size) // 2
             bg_fill.paste(inner, (offset, offset), inner)
@@ -455,7 +456,7 @@ class PillowIconComposer:
             try:
                 with Image.open(ha_path) as img:
                     rgba = img.convert("RGBA")
-                    return rgba.resize((size, size), Image.Resampling.LANCZOS)
+                    return rgba.resize((size, size), _LANCZOS)
             except Exception as err:  # noqa: BLE001
                 _LOGGER.debug("Failed loading hass_frontend icon %s: %s", ha_path, err)
 
@@ -481,7 +482,7 @@ class PillowIconComposer:
             ss_size = min(256, max(96, int(size * 0.68)))
             mask_hi = _rasterize_svg_mask(path_d, ss_size)
             target_icon_size = max(16, int(size * 0.64))
-            mask = mask_hi.resize((target_icon_size, target_icon_size), Image.Resampling.LANCZOS)
+            mask = mask_hi.resize((target_icon_size, target_icon_size), _LANCZOS)
             fg_layer = Image.new("RGBA", (target_icon_size, target_icon_size), _hex_to_rgba(fg_hex, 255))
             pos = (size - target_icon_size) // 2
             img.paste(fg_layer, (pos, pos), mask)
@@ -513,7 +514,7 @@ class PillowIconComposer:
             with Image.open(io.BytesIO(raw_bytes)) as src:
                 rgba = src.convert("RGBA")
                 bg = Image.new("RGBA", (size, size), _hex_to_rgba(bg_hex, 255))
-                fitted = rgba.resize((size, size), Image.Resampling.LANCZOS)
+                fitted = rgba.resize((size, size), _LANCZOS)
                 bg.paste(fitted, (0, 0), fitted)
                 return bg
         except Exception as err:  # noqa: BLE001

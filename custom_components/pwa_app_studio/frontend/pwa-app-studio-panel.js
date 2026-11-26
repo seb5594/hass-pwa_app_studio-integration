@@ -532,8 +532,19 @@ class PwaAppStudioPanel extends HTMLElement {
     this._renderDevicePreviewCards();
   }
 
+  _cardPresets() {
+    const [year, month] = (this._hass?.config?.version || "").split(".").map(Number);
+    if (year === 2021 || (year === 2022 && month < 11)) {
+      return {
+        ...CARD_PRESETS,
+        tile: { label: "Schaltfläche", config: { type: "button", entity: "sun.sun", name: "Sonnenstand" } },
+      };
+    }
+    return CARD_PRESETS;
+  }
+
   _addPresetCard(presetKey) {
-    const preset = CARD_PRESETS[presetKey];
+    const preset = this._cardPresets()[presetKey];
     if (!preset) return;
     this._draft.content.source_mode = "lovelace_cards";
     this._draft.content.cards.push({
@@ -1209,7 +1220,7 @@ class PwaAppStudioPanel extends HTMLElement {
               <button class="btn" id="c-import-btn">Hinzufügen</button>
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">
-              ${Object.entries(CARD_PRESETS)
+              ${Object.entries(this._cardPresets())
                 .map(
                   ([key, val]) =>
                     `<button class="btn preset-add-btn" data-preset="${key}">+ ${this._esc(val.label)}</button>`

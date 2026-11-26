@@ -20,6 +20,6 @@ Die App verwendet das angemeldete Home-Assistant-Konto. Für ein Dashboard gelte
 - **Zugriff → Gäste im Heimnetz** lässt dich einzelne Konten ohne Administratorrechte mit „Nur lokaler Zugriff“ freigeben. Der QR-Code nutzt die interne Home-Assistant-Adresse. Das Gastkonto behält seine übrigen Rechte in Home Assistant.
 - **Teilen → In Home Assistant öffnen** verwendet die in der Companion-App aktive Sitzung. Im Browser kann eine vorhandene Sitzung derselben Home-Assistant-Adresse weiterverwendet werden. Eine eigenständig installierte PWA mit separatem Speicher öffnet beim ersten Start die reguläre Home-Assistant-Anmeldung.
 
-Die Mindestversion von Home Assistant Core ist **2026.9.0** (HACS-Metadaten).
+Die Mindestversion von Home Assistant Core ist **2021.12.0** (HACS-Metadaten). Auf älteren Core-Versionen bietet der Designer eine Schaltflächenkarte an, wenn die Tile-Karte noch nicht verfügbar ist. Für die Installation der PWA selbst ist ein aktueller Browser erforderlich.
 
 [Architekturprüfung](docs/architekturpruefung.md)

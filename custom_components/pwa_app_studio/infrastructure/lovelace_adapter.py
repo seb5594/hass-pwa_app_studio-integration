@@ -18,12 +18,11 @@ class HaLovelaceAdapter:
 
     async def async_list_dashboards(self) -> list[dict[str, Any]]:
         lovelace_data = self._hass.data.get("lovelace")
-        if lovelace_data is None:
-            return []
-
-        dashboards_map = getattr(lovelace_data, "dashboards", None)
-        if not isinstance(dashboards_map, dict):
-            return []
+        dashboards_map = self._dashboards()
+        if isinstance(lovelace_data, dict):
+            resource_mode = lovelace_data.get("mode", "storage")
+        else:
+            resource_mode = getattr(lovelace_data, "resource_mode", "storage")
 
         result: list[dict[str, Any]] = []
         for url_path, dashboard in dashboards_map.items():
@@ -34,7 +33,7 @@ class HaLovelaceAdapter:
                 or ("Übersicht" if normalized_path == "lovelace" else normalized_path)
             )
             icon = str(cfg_meta.get("icon") or "mdi:view-dashboard")
-            mode = str(cfg_meta.get("mode") or getattr(lovelace_data, "resource_mode", "storage"))
+            mode = str(cfg_meta.get("mode") or resource_mode)
             views_info: list[dict[str, Any]] = []
 
             try:
@@ -73,12 +72,7 @@ class HaLovelaceAdapter:
         return result
 
     async def async_get_dashboard_icon(self, url_path: str) -> str | None:
-        lovelace_data = self._hass.data.get("lovelace")
-        if lovelace_data is None:
-            return None
-        dashboards_map = getattr(lovelace_data, "dashboards", None)
-        if not isinstance(dashboards_map, dict):
-            return None
+        dashboards_map = self._dashboards()
         lookup_key = None if url_path in ("", "lovelace") else url_path
         dashboard = dashboards_map.get(lookup_key)
         if dashboard is None and lookup_key is not None:
@@ -88,6 +82,12 @@ class HaLovelaceAdapter:
         cfg_meta = getattr(dashboard, "config", None) or {}
         icon = cfg_meta.get("icon")
         return str(icon) if icon else "mdi:view-dashboard"
+
+    def _dashboards(self) -> dict[str | None, Any]:
+        lovelace = self._hass.data.get("lovelace")
+        if isinstance(lovelace, dict):
+            return lovelace.get("dashboards", {})
+        return getattr(lovelace, "dashboards", {})
 
     @staticmethod
     def _extract_cards_from_view(view: dict[str, Any]) -> list[dict[str, Any]]:

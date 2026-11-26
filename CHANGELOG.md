@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026.11.26.2
+
+- Support Home Assistant Core 2021.12.0 and newer, including older Python, static routes, Lovelace dashboards and icon libraries.
+- Use a button card on Core versions before the Tile card was introduced. Check local-only access explicitly for older WebSocket sessions.
+- Test integration setup, the designer button, sidebar option reloading and runtime authorization across Core versions.
+
 ## 2026.11.26.1
 
 - Guide setup through five steps, add per-app launch animations with a live sample and credit the developer in every installed app.

@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from inspect import signature
 from pathlib import Path
-from typing import Any
 
-from homeassistant.components import frontend, panel_custom
+from homeassistant.components import frontend, http, panel_custom
 from homeassistant.components.frontend import add_extra_js_url
-from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.helpers import config_validation as cv
 from homeassistant.core import HomeAssistant
 
 from .application.services import (
@@ -39,12 +37,10 @@ from .infrastructure.storage_repository import HaStorageAppRepository
 from .presentation.http_views import async_register_http_views
 from .presentation.websocket_api import async_register_websocket_commands
 
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
 PLATFORMS: list[Platform] = [Platform.BUTTON]
 
 
-@dataclass(slots=True)
+@dataclass
 class PwaAppStudioRuntimeData:
     app_service: PwaAppService
     manifest_builder: ManifestBuilderService
@@ -52,11 +48,6 @@ class PwaAppStudioRuntimeData:
     icon_composer: PillowIconComposer
     lovelace_adapter: HaLovelaceAdapter
     user_directory: HaUserDirectoryAdapter
-
-
-async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
-    hass.data.setdefault(DOMAIN, {})
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -92,15 +83,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         domain_store["runtime"] = runtime
 
         frontend_dir = Path(__file__).parent / "frontend"
-        await hass.http.async_register_static_paths(
-            [
-                StaticPathConfig(
-                    STATIC_URL_PATH,
-                    str(frontend_dir),
-                    cache_headers=False,
-                )
-            ]
-        )
+        if hasattr(hass.http, "async_register_static_paths"):
+            await hass.http.async_register_static_paths(
+                [http.StaticPathConfig(STATIC_URL_PATH, str(frontend_dir), cache_headers=False)]
+            )
+        else:
+            hass.http.register_static_path(STATIC_URL_PATH, str(frontend_dir), cache_headers=False)
+
         add_extra_js_url(hass, f"{STATIC_URL_PATH}/pwa-app-studio-launcher.js?v={VERSION}")
 
         async_register_http_views(
@@ -119,8 +108,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         domain_store["initialized"] = True
 
     await _async_register_panels(hass, entry)
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    if hasattr(hass.config_entries, "async_forward_entry_setups"):
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    else:
+        # Older Core loads forwarded platforms after the parent setup has returned.
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, Platform.BUTTON))
+    entry.async_on_unload(entry.add_update_listener(_async_reload_options))
     return True
+
+
+async def _async_reload_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def _async_register_panels(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -132,6 +130,10 @@ async def _async_register_panels(hass: HomeAssistant, entry: ConfigEntry) -> Non
     _remove_panel_if_exists(hass, PANEL_URL_PATH)
     _remove_panel_if_exists(hass, RUNNER_PANEL_URL_PATH)
 
+    panel_options = {}
+    if "handle_safe_area" in signature(panel_custom.async_register_panel).parameters:
+        panel_options["handle_safe_area"] = True
+
     # Admin-only PWA Designer Panel (sidebar_title=None hides it from sidebar when disabled)
     await panel_custom.async_register_panel(
         hass=hass,
@@ -142,8 +144,8 @@ async def _async_register_panels(hass: HomeAssistant, entry: ConfigEntry) -> Non
         module_url=f"{STATIC_URL_PATH}/pwa-app-studio-panel.js?v={VERSION}",
         embed_iframe=False,
         require_admin=True,
-        handle_safe_area=True,
         config={},
+        **panel_options,
     )
 
     # Hidden non-admin PWA runner panel mounted inside HA context provider tree
@@ -156,8 +158,8 @@ async def _async_register_panels(hass: HomeAssistant, entry: ConfigEntry) -> Non
         module_url=f"{STATIC_URL_PATH}/pwa-app-studio-runner-panel.js?v={VERSION}",
         embed_iframe=False,
         require_admin=False,
-        handle_safe_area=True,
         config={},
+        **panel_options,
     )
 
 

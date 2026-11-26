@@ -21,6 +21,12 @@
       try {
         const ha = document.querySelector("home-assistant");
         const main = ha?.shadowRoot?.querySelector("home-assistant-main");
+        const legacyDrawer = main?.shadowRoot?.querySelector("app-drawer-layout");
+        if (legacyDrawer) {
+          legacyDrawer.style.setProperty("--app-drawer-width", "0px", "important");
+          const panel = legacyDrawer.querySelector("app-drawer");
+          if (panel) panel.hidden = true;
+        }
         const drawer = main?.shadowRoot?.querySelector("ha-drawer");
         const aside = drawer?.shadowRoot?.querySelector(".mdc-drawer");
         if (aside) aside.style.display = "none";

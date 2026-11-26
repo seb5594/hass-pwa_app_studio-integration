@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, EVENT_OPEN_DESIGNER, NAME, PANEL_URL_PATH, VERSION
@@ -29,17 +28,20 @@ class PwaAppStudioOpenDesignerButton(ButtonEntity):
     _attr_icon = "mdi:cellphone-cog"
     _attr_entity_category = EntityCategory.CONFIG
 
+    if not hasattr(ButtonEntity, "translation_key"):
+        _attr_name = "Open PWA Web-App Studio"
+
     def __init__(self, entry: ConfigEntry) -> None:
         self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_open_designer"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=NAME,
-            manufacturer="PWA Web-App Studio",
-            configuration_url=f"homeassistant://navigate/{PANEL_URL_PATH}",
-            model="Home Assistant PWA Builder",
-            sw_version=VERSION,
-        )
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": NAME,
+            "manufacturer": "PWA Web-App Studio",
+            "configuration_url": f"homeassistant://navigate/{PANEL_URL_PATH}",
+            "model": "Home Assistant PWA Builder",
+            "sw_version": VERSION,
+        }
 
     async def async_press(self) -> None:
         triggered_by = self._context.user_id if self._context else None

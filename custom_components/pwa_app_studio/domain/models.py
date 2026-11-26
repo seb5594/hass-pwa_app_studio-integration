@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from enum import StrEnum
+from enum import Enum
 import re
 from typing import Any
 import uuid
@@ -13,18 +13,22 @@ SLUG_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]{1,48}$")
 HEX_COLOR_PATTERN = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
-class ContentSourceMode(StrEnum):
+class _StringEnum(str, Enum):
+    __str__ = str.__str__
+
+
+class ContentSourceMode(_StringEnum):
     LOVELACE_DASHBOARD = "lovelace_dashboard"
     LOVELACE_CARDS = "lovelace_cards"
 
 
-class CardLayoutMode(StrEnum):
+class CardLayoutMode(_StringEnum):
     STACK = "stack"
     GRID = "grid"
     MASONRY = "masonry"
 
 
-class IconMode(StrEnum):
+class IconMode(_StringEnum):
     HA_DEFAULT = "ha_default"
     MDI_ICON = "mdi_icon"
     HA_WITH_BADGE = "ha_with_badge"
@@ -33,28 +37,28 @@ class IconMode(StrEnum):
     DASHBOARD_DEFAULT = "dashboard_default"
 
 
-class BadgePosition(StrEnum):
+class BadgePosition(_StringEnum):
     BOTTOM_RIGHT = "bottom_right"
     TOP_RIGHT = "top_right"
     BOTTOM_LEFT = "bottom_left"
     TOP_LEFT = "top_left"
 
 
-class DisplayMode(StrEnum):
+class DisplayMode(_StringEnum):
     STANDALONE = "standalone"
     FULLSCREEN = "fullscreen"
     MINIMAL_UI = "minimal-ui"
     BROWSER = "browser"
 
 
-class OrientationMode(StrEnum):
+class OrientationMode(_StringEnum):
     ANY = "any"
     NATURAL = "natural"
     PORTRAIT = "portrait"
     LANDSCAPE = "landscape"
 
 
-class DevicePreviewTarget(StrEnum):
+class DevicePreviewTarget(_StringEnum):
     DESKTOP = "desktop"
     TABLET = "tablet"
     SMARTPHONE = "smartphone"
@@ -89,7 +93,7 @@ def validate_slug(raw_slug: str) -> str:
     return candidate
 
 
-@dataclass(slots=True)
+@dataclass
 class PwaCardItem:
     id: str
     order: int
@@ -122,7 +126,7 @@ class PwaCardItem:
         }
 
 
-@dataclass(slots=True)
+@dataclass
 class PwaShortcut:
     name: str
     short_name: str
@@ -150,7 +154,7 @@ class PwaShortcut:
         }
 
 
-@dataclass(slots=True)
+@dataclass
 class PwaIconSpec:
     mode: IconMode = IconMode.HA_DEFAULT
     mdi_icon: str = "mdi:home-assistant"
@@ -223,7 +227,7 @@ class PwaIconSpec:
         }
 
 
-@dataclass(slots=True)
+@dataclass
 class PwaManifestOptions:
     name: str = "Home Assistant App"
     short_name: str = "HA App"
@@ -320,7 +324,7 @@ class PwaManifestOptions:
         }
 
 
-@dataclass(slots=True)
+@dataclass
 class PwaContentSpec:
     source_mode: ContentSourceMode = ContentSourceMode.LOVELACE_DASHBOARD
     dashboard_url_path: str = "lovelace"
@@ -387,7 +391,7 @@ class PwaContentSpec:
         }
 
 
-@dataclass(slots=True)
+@dataclass
 class PwaAccessPolicy:
     allow_all_authenticated: bool = True
     allowed_user_ids: list[str] = field(default_factory=list)
@@ -424,7 +428,7 @@ class PwaAccessPolicy:
         }
 
 
-@dataclass(slots=True)
+@dataclass
 class PwaApp:
     app_id: str
     slug: str
