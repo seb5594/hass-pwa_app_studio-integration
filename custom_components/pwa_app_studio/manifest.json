@@ -2,7 +2,7 @@
   "domain": "pwa_app_studio",
   "name": "PWA Web-App Studio",
   "categories": [
-    "local_services"
+    "diy_makers"
   ],
   "codeowners": [
     "@seb5594"
@@ -23,5 +23,5 @@
     "segno>=1.6.0"
   ],
   "single_config_entry": true,
-  "version": "2026.11.26.91"
+  "version": "2026.11.26.92"
 }
