@@ -4,8 +4,8 @@
 <p align="center">
   <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=seb5594&amp;repository=hass-pwa_app_studio-integration&amp;category=integration"><img src="https://img.shields.io/static/v1?label=HACS%20%C2%B7%20Marketplace&amp;message=Add%20integration&amp;color=41BDF5&amp;logo=homeassistantcommunitystore&amp;logoColor=white&amp;style=for-the-badge" alt="HACS · Marketplace" height="28"></a>
   <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/actions/workflows/compat.yml"><img src="https://img.shields.io/static/v1?label=home%20assistant&amp;message=%E2%89%A5%202026.9.0&amp;color=1877A5&amp;style=for-the-badge" alt="home assistant" height="28"></a><br>
-  <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/releases/tag/2026.11.26"><img src="https://img.shields.io/static/v1?label=integration%20version&amp;message=2026.11.26&amp;color=1877A5&amp;style=for-the-badge" alt="integration version" height="28"></a>
-  <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/releases"><img src="https://img.shields.io/github/downloads/seb5594/hass-pwa_app_studio-integration/2026.11.26/total?label=downloads&amp;color=1877A5&amp;style=for-the-badge" alt="downloads" height="28"></a><br>
+  <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/releases/tag/2026.11.26.1"><img src="https://img.shields.io/static/v1?label=integration%20version&amp;message=2026.11.26.1&amp;color=1877A5&amp;style=for-the-badge" alt="integration version" height="28"></a>
+  <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/releases"><img src="https://img.shields.io/github/downloads/seb5594/hass-pwa_app_studio-integration/2026.11.26.1/total?label=downloads&amp;color=1877A5&amp;style=for-the-badge" alt="downloads" height="28"></a><br>
   <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/seb5594/hass-pwa_app_studio-integration/ci.yml?branch=main&amp;label=checks&amp;style=flat" alt="checks" height="20"></a>
   <img src="https://img.shields.io/static/v1?label=tests&amp;message=2%20passed&amp;color=2F855A&amp;style=flat" alt="tests" height="20">
   <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/issues"><img src="https://img.shields.io/github/issues/seb5594/hass-pwa_app_studio-integration?label=issues&amp;style=flat" alt="issues" height="20"></a><br>
@@ -28,6 +28,14 @@ PWA Web-App Studio is a custom Home Assistant integration that lets administrato
 
 The app uses the signed-in Home Assistant account. Dashboard access still depends on that account's Home Assistant permissions. Offline caching covers the app shell and assets. Lovelace content needs a connection to Home Assistant.
 
+## Launch and sharing
+
+The five-step designer previews the app’s launch screen and offers three motion styles. Choose **Guests on the home network** to share an app with selected local-only, non-admin Home Assistant accounts through the internal URL. The companion link opens the app in the active Home Assistant session. A standalone installation reuses the session available to its browser context and signs in through Home Assistant when needed.
+
+Minimum Home Assistant Core version: **2026.9.0**.
+
+[Architectural review (German)](docs/architekturpruefung.md)
+
 <!-- support:begin (generated, shared text) -->
 ## Say thanks
 
@@ -45,11 +53,3 @@ If my work helped you or turned out to be useful, show your appreciation with a 
 
 Published under the [Apache License 2.0](LICENSE).
 <!-- license:end -->
-
-## Launch and sharing
-
-The five-step designer previews the app’s launch screen and offers three motion styles. Choose **Guests on the home network** to share an app with selected local-only, non-admin Home Assistant accounts through the internal URL. The companion link opens the app in the active Home Assistant session. A standalone installation reuses the session available to its browser context and signs in through Home Assistant when needed.
-
-Minimum Home Assistant Core version: **2026.9.0**.
-
-[Architectural review (German)](docs/architekturpruefung.md)
