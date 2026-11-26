@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.11.26.7
+
+- Load frontend dependencies from the same release so stale translations cannot break the Share step.
+- Keep the normal browser link and installation available while a QR code loads or if its request fails.
+
 ## 2026.11.26.6
 
 - Open Android installation links in Chrome and show the native install button when the browser offers it.

@@ -207,6 +207,6 @@ export function studioLanguage(hass) {
 }
 
 export function studioMessage(language, key, values = {}) {
-  const text = MESSAGES[key][language === "de" ? 1 : 0];
+  const text = MESSAGES[key]?.[language === "de" ? 1 : 0] ?? key;
   return text.replace(/\{(\w+)\}/g, (token, name) => String(values[name] ?? token));
 }

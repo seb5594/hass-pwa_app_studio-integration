@@ -137,8 +137,8 @@ class PwaServiceWorkerView(HomeAssistantView):
                 f"{base}/icon-maskable-512.png?v={app.version}",
                 f"{STATIC_URL_PATH}/pwa-shell.css?v={VERSION}",
                 f"{STATIC_URL_PATH}/pwa-runtime.js?v={VERSION}",
-                f"{STATIC_URL_PATH}/pwa-install.js",
-                f"{STATIC_URL_PATH}/pwa-studio-i18n.js",
+                f"{STATIC_URL_PATH}/pwa-install.js?v={VERSION}",
+                f"{STATIC_URL_PATH}/pwa-studio-i18n.js?v={VERSION}",
             ]
         )
         offline_enabled = "true" if app.manifest.offline_enabled else "false"

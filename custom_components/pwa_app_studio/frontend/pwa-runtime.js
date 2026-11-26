@@ -1,7 +1,11 @@
 /* Standalone PWA runtime hosted at /pwa_app_studio/app/<slug>/ handling SW, IndieAuth PKCE, ACL check, and device install. */
 
-import { chromeInstallLink } from "./pwa-install.js";
-import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
+// Keep dependencies on the same release as this entry point.
+const versionQuery = new URL(import.meta.url).search;
+const [{ chromeInstallLink }, { studioLanguage, studioMessage }] = await Promise.all([
+  import(`./pwa-install.js${versionQuery}`),
+  import(`./pwa-studio-i18n.js${versionQuery}`),
+]);
 
 (async () => {
   const root = document.getElementById("pwa-root");
