@@ -1,1 +1,1 @@
-'''Presentation layer (HTTP views & WebSocket API) for PWA App Studio.'''
+'''Presentation layer (HTTP views & WebSocket API) for PWA Web-App Studio.'''

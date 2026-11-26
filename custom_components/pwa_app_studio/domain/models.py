@@ -1,4 +1,4 @@
-'''Pure domain entities, value objects, and validation rules for PWA App Studio.'''
+'''Pure domain entities, value objects, and validation rules for PWA Web-App Studio.'''
 
 from __future__ import annotations
 

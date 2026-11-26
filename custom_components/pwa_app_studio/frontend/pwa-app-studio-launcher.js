@@ -38,36 +38,30 @@
   }
 
   function initAdminEventBridge() {
-    let subscribed = false;
-
-    const trySubscribe = () => {
-      if (subscribed) return;
-      const ha = document.querySelector("home-assistant");
-      const hass = ha?.hass;
-      if (!hass?.connection || !hass?.user) return;
-
-      if (!hass.user.is_admin) {
-        subscribed = true;
-        return;
+    let connection;
+    let unsubscribe;
+    async function subscribe() {
+      const hass = document.querySelector("home-assistant")?.hass;
+      if (!hass?.user?.is_admin || !hass.connection || connection === hass.connection) return;
+      unsubscribe?.();
+      unsubscribe = undefined;
+      const active = connection = hass.connection;
+      try {
+        const stop = await active.subscribeEvents(({ data }) => {
+          if (connection !== active || document.visibilityState !== "visible") return;
+          if (data.triggered_by !== hass.user.id) return;
+          window.location.assign("/pwa-app-studio");
+        }, EVENT_NAME);
+        if (connection === active) unsubscribe = stop;
+        else stop();
+      } catch {
+        if (connection === active) connection = undefined;
       }
-
-      subscribed = true;
-      hass.connection.subscribeEvents((event) => {
-        const currentHass = document.querySelector("home-assistant")?.hass;
-        if (!currentHass?.user?.is_admin) return;
-        const target = event?.data?.panel_path || "/pwa-app-studio";
-        if (window.location.pathname !== target) {
-          window.history.pushState(null, "", target);
-          window.dispatchEvent(new CustomEvent("location-changed"));
-        }
-      }, EVENT_NAME);
-    };
-
-    const timer = setInterval(() => {
-      trySubscribe();
-      if (subscribed) clearInterval(timer);
-    }, 800);
-    trySubscribe();
+    }
+    subscribe();
+    window.addEventListener("pageshow", subscribe);
+    document.addEventListener("visibilitychange", subscribe);
+    setInterval(subscribe, 1500);
   }
 
   applyEmbeddedPwaChromeHiding();

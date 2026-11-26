@@ -1,5 +1,5 @@
 <!-- header:begin (generated from project metadata) -->
-<h1 align="center">PWA App Studio</h1>
+<h1 align="center">PWA Web-App Studio</h1>
 
 <p align="center">
   <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=seb5594&amp;repository=hass-pwa_app_studio-integration&amp;category=integration"><img src="https://img.shields.io/static/v1?label=HACS%20%C2%B7%20Marketplace&amp;message=Add%20integration&amp;color=41BDF5&amp;logo=homeassistantcommunitystore&amp;logoColor=white&amp;style=for-the-badge" alt="HACS · Marketplace" height="28"></a>
@@ -17,13 +17,13 @@
 
 **🇬🇧 English** · [🇩🇪 Deutsch](README.de.md)
 
-PWA App Studio is a custom Home Assistant integration that lets administrators turn Lovelace dashboards or selected cards into installable web apps. Each app has its own URL, icon, and access settings.
+PWA Web-App Studio is a custom Home Assistant integration that lets administrators turn Lovelace dashboards or selected cards into installable web apps. Each app has its own URL, icon, and access settings.
 
 ## Try the first draft
 
 1. Copy `custom_components/pwa_app_studio/` into the `custom_components/` directory of a test Home Assistant installation.
-2. Restart Home Assistant and add **PWA App Studio** under **Settings > Devices & services > Add integration**.
-3. Open **PWA App Studio** from the sidebar, choose a dashboard or add cards, then save the app.
+2. Restart Home Assistant and add **PWA Web-App Studio** under **Settings > Devices & services > Add integration**.
+3. Open **PWA Web-App Studio** from the sidebar, choose a dashboard or add cards, then save the app.
 4. Open the app via its QR code or install link on a device that can reach Home Assistant over HTTPS.
 
 The app uses the signed-in Home Assistant account. Dashboard access still depends on that account's Home Assistant permissions. Offline caching covers the app shell and assets. Lovelace content needs a connection to Home Assistant.

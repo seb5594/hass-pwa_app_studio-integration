@@ -1,4 +1,4 @@
-'''ConfigFlow and OptionsFlowWithReload for PWA App Studio.'''
+'''ConfigFlow and OptionsFlowWithReload for PWA Web-App Studio.'''
 
 from __future__ import annotations
 
@@ -14,16 +14,8 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 
 from .const import (
-    CONF_DEFAULT_BG_COLOR,
-    CONF_DEFAULT_THEME_COLOR,
     CONF_SHOW_IN_SIDEBAR,
-    CONF_SIDEBAR_ICON,
-    CONF_SIDEBAR_TITLE,
-    DEFAULT_BG_COLOR,
     DEFAULT_SHOW_IN_SIDEBAR,
-    DEFAULT_SIDEBAR_ICON,
-    DEFAULT_SIDEBAR_TITLE,
-    DEFAULT_THEME_COLOR,
     DOMAIN,
 )
 
@@ -35,28 +27,12 @@ def _build_schema(defaults: dict[str, Any]) -> vol.Schema:
                 CONF_SHOW_IN_SIDEBAR,
                 default=defaults.get(CONF_SHOW_IN_SIDEBAR, DEFAULT_SHOW_IN_SIDEBAR),
             ): bool,
-            vol.Required(
-                CONF_SIDEBAR_TITLE,
-                default=defaults.get(CONF_SIDEBAR_TITLE, DEFAULT_SIDEBAR_TITLE),
-            ): str,
-            vol.Required(
-                CONF_SIDEBAR_ICON,
-                default=defaults.get(CONF_SIDEBAR_ICON, DEFAULT_SIDEBAR_ICON),
-            ): str,
-            vol.Required(
-                CONF_DEFAULT_THEME_COLOR,
-                default=defaults.get(CONF_DEFAULT_THEME_COLOR, DEFAULT_THEME_COLOR),
-            ): str,
-            vol.Required(
-                CONF_DEFAULT_BG_COLOR,
-                default=defaults.get(CONF_DEFAULT_BG_COLOR, DEFAULT_BG_COLOR),
-            ): str,
         }
     )
 
 
 class PwaAppStudioConfigFlow(ConfigFlow, domain=DOMAIN):
-    '''Handle a config flow for PWA App Studio.'''
+    '''Handle a config flow for PWA Web-App Studio.'''
 
     VERSION = 1
 
@@ -68,7 +44,7 @@ class PwaAppStudioConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             return self.async_create_entry(
-                title="PWA App Studio",
+                title="PWA Web-App Studio",
                 data={},
                 options=user_input,
             )

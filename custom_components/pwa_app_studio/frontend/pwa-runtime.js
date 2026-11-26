@@ -94,7 +94,7 @@
     try {
       await navigator.serviceWorker.register(swUrl, { scope: basePath });
     } catch (err) {
-      console.warn("PWA App Studio SW registration failed:", err);
+      console.warn("PWA Web-App Studio SW registration failed:", err);
     }
   }
 

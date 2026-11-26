@@ -1,4 +1,4 @@
-'''PWA App Studio custom integration entrypoint.'''
+'''PWA Web-App Studio custom integration entrypoint.'''
 
 from __future__ import annotations
 
@@ -19,16 +19,10 @@ from .application.services import (
     PwaAppService,
 )
 from .const import (
-    CONF_DEFAULT_BG_COLOR,
-    CONF_DEFAULT_THEME_COLOR,
     CONF_SHOW_IN_SIDEBAR,
-    CONF_SIDEBAR_ICON,
-    CONF_SIDEBAR_TITLE,
-    DEFAULT_BG_COLOR,
     DEFAULT_SHOW_IN_SIDEBAR,
     DEFAULT_SIDEBAR_ICON,
     DEFAULT_SIDEBAR_TITLE,
-    DEFAULT_THEME_COLOR,
     DOMAIN,
     PANEL_URL_PATH,
     PANEL_WEBCOMPONENT,
@@ -63,6 +57,8 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    if entry.title == "PWA App Studio":
+        hass.config_entries.async_update_entry(entry, title=DEFAULT_SIDEBAR_TITLE)
     domain_store = hass.data.setdefault(DOMAIN, {})
 
     if not domain_store.get("initialized"):
@@ -127,16 +123,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _async_register_panels(hass: HomeAssistant, entry: ConfigEntry) -> None:
     opts = {**entry.data, **entry.options}
     show_in_sidebar = bool(opts.get(CONF_SHOW_IN_SIDEBAR, DEFAULT_SHOW_IN_SIDEBAR))
-    sidebar_title = (
-        str(opts.get(CONF_SIDEBAR_TITLE, DEFAULT_SIDEBAR_TITLE))
-        if show_in_sidebar
-        else None
-    )
-    sidebar_icon = (
-        str(opts.get(CONF_SIDEBAR_ICON, DEFAULT_SIDEBAR_ICON))
-        if show_in_sidebar
-        else None
-    )
+    sidebar_title = DEFAULT_SIDEBAR_TITLE if show_in_sidebar else None
+    sidebar_icon = DEFAULT_SIDEBAR_ICON if show_in_sidebar else None
 
     _remove_panel_if_exists(hass, PANEL_URL_PATH)
     _remove_panel_if_exists(hass, RUNNER_PANEL_URL_PATH)
@@ -152,11 +140,7 @@ async def _async_register_panels(hass: HomeAssistant, entry: ConfigEntry) -> Non
         embed_iframe=False,
         require_admin=True,
         handle_safe_area=True,
-        config={
-            "default_theme_color": opts.get(CONF_DEFAULT_THEME_COLOR, DEFAULT_THEME_COLOR),
-            "default_bg_color": opts.get(CONF_DEFAULT_BG_COLOR, DEFAULT_BG_COLOR),
-            "show_in_sidebar": show_in_sidebar,
-        },
+        config={},
     )
 
     # Hidden non-admin PWA runner panel mounted inside HA context provider tree

@@ -2,32 +2,22 @@
   "config": {
     "step": {
       "user": {
-        "title": "PWA App Studio einrichten",
-        "description": "Konfiguriere den nur für Administratoren zugänglichen PWA Designer.",
+        "title": "PWA Web-App Studio einrichten",
         "data": {
-          "show_in_sidebar": "Sidebar-Tab für Administratoren aktivieren",
-          "sidebar_title": "Sidebar-Titel",
-          "sidebar_icon": "Sidebar-Icon (MDI)",
-          "default_theme_color": "Standard Theme-Farbe",
-          "default_bg_color": "Standard Hintergrundfarbe"
+          "show_in_sidebar": "Sidebar-Tab für Administratoren aktivieren"
         }
       }
     },
     "abort": {
-      "single_instance_allowed": "PWA App Studio ist bereits eingerichtet."
+      "single_instance_allowed": "PWA Web-App Studio ist bereits eingerichtet."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "PWA App Studio Optionen",
-        "description": "Passe die Sidebar-Sichtbarkeit (nur Admins) und Standardfarben an. Auch bei deaktiviertem Sidebar-Tab bleibt der Designer über die Button-Entität erreichbar.",
+        "title": "PWA Web-App Studio Optionen",
         "data": {
-          "show_in_sidebar": "Sidebar-Tab für Administratoren aktivieren",
-          "sidebar_title": "Sidebar-Titel",
-          "sidebar_icon": "Sidebar-Icon (MDI)",
-          "default_theme_color": "Standard Theme-Farbe",
-          "default_bg_color": "Standard Hintergrundfarbe"
+          "show_in_sidebar": "Sidebar-Tab für Administratoren aktivieren"
         }
       }
     }

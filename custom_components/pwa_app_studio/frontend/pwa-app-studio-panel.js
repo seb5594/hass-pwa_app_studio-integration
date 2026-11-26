@@ -1,4 +1,4 @@
-/* Admin-only PWA App Studio Designer custom panel with Live Device Preview, Multi-Card Composer, Icon Studio & QR Distribution. */
+/* Admin-only PWA Web-App Studio Designer custom panel with Live Device Preview, Multi-Card Composer, Icon Studio & QR Distribution. */
 
 const CARD_PRESETS = {
   tile: {
@@ -59,6 +59,7 @@ class PwaAppStudioPanel extends HTMLElement {
     this._draft = null;
     this._activeTab = "general";
     this._previewDevice = "smartphone";
+    this._mobilePane = "editor";
     this._previewRotated = false;
     this._iconPreviewUrl = null;
     this._qrInfo = null;
@@ -67,6 +68,10 @@ class PwaAppStudioPanel extends HTMLElement {
     this._dragCardIndex = null;
     this._previewCardElements = [];
     this._initialized = false;
+  }
+
+  disconnectedCallback() {
+    this._previewObserver?.disconnect();
   }
 
   _esc(val) {
@@ -98,6 +103,8 @@ class PwaAppStudioPanel extends HTMLElement {
   }
 
   connectedCallback() {
+    const wrap = this.shadowRoot.querySelector(".device-bezel-wrap");
+    if (wrap) this._previewObserver?.observe(wrap);
     if (!this._initialized) {
       this._render();
       this._initialized = true;
@@ -173,7 +180,22 @@ class PwaAppStudioPanel extends HTMLElement {
   }
 
   _createEmptyDraft() {
-    const panelCfg = this._panel?.config || {};
+    const styles = getComputedStyle(this);
+    const canvas = document.createElement("canvas").getContext("2d");
+    function themeColor(names, fallback) {
+      canvas.fillStyle = fallback;
+      for (const name of names) {
+        const value = styles.getPropertyValue(name).trim();
+        if (value && CSS.supports("color", value)) {
+          canvas.fillStyle = value;
+          break;
+        }
+      }
+      canvas.fillRect(0, 0, 1, 1);
+      const rgb = canvas.getImageData(0, 0, 1, 1).data.slice(0, 3);
+      return "#" + Array.from(rgb, n => n.toString(16).padStart(2, "0")).join("");
+    }
+    const accent = themeColor(["--accent-color", "--primary-color"], "#03a9f4");
     const firstDash = this._dashboards[0]?.url_path || "lovelace";
     return {
       app_id: null,
@@ -184,8 +206,8 @@ class PwaAppStudioPanel extends HTMLElement {
         description: "Maßgeschneiderte Home Assistant PWA",
         display: "standalone",
         orientation: "any",
-        theme_color: panelCfg.default_theme_color || "#03a9f4",
-        background_color: panelCfg.default_bg_color || "#111827",
+        theme_color: accent,
+        background_color: themeColor(["--primary-background-color"], "#111827"),
         lang: "de",
         dir: "ltr",
         categories: ["utilities"],
@@ -211,7 +233,7 @@ class PwaAppStudioPanel extends HTMLElement {
         mdi_icon: "mdi:home-assistant",
         icon_svg_path: "",
         icon_color: "#ffffff",
-        bg_color: panelCfg.default_theme_color || "#03a9f4",
+        bg_color: accent,
         badge_icon: "mdi:lightbulb",
         badge_svg_path: "",
         badge_color: "#ffffff",
@@ -232,6 +254,7 @@ class PwaAppStudioPanel extends HTMLElement {
   }
 
   _newAppDraft() {
+    this._mobilePane = "editor";
     this._selectedAppId = null;
     this._draft = this._createEmptyDraft();
     this._qrInfo = null;
@@ -241,6 +264,7 @@ class PwaAppStudioPanel extends HTMLElement {
   }
 
   _selectApp(appId) {
+    this._mobilePane = "editor";
     const found = this._apps.find((a) => a.app_id === appId);
     if (!found) return;
     this._selectedAppId = found.app_id;
@@ -536,7 +560,7 @@ class PwaAppStudioPanel extends HTMLElement {
     if (!this._draft) {
       this.shadowRoot.innerHTML = `
         <style>:host{display:block;padding:24px;color:var(--primary-text-color,#fff);background:var(--primary-background-color,#111827);min-height:100vh;}</style>
-        <div>${this._esc(this._errorMsg || "Lade PWA App Studio...")}</div>
+        <div>${this._esc(this._errorMsg || "Lade PWA Web-App Studio...")}</div>
       `;
       return;
     }
@@ -638,7 +662,7 @@ class PwaAppStudioPanel extends HTMLElement {
           background: rgba(255,255,255,0.02);
         }
         .app-item.active {
-          border-color: var(--primary-color, #03a9f4);
+          border-color: var(--accent-color, var(--primary-color, #03a9f4));
           background: rgba(3, 169, 244, 0.14);
         }
         .editor-pane {
@@ -671,7 +695,7 @@ class PwaAppStudioPanel extends HTMLElement {
           font-size: 13px;
         }
         .tab.active {
-          background: var(--primary-color, #03a9f4);
+          background: var(--accent-color, var(--primary-color, #03a9f4));
           color: #fff;
           border-color: transparent;
         }
@@ -729,7 +753,7 @@ class PwaAppStudioPanel extends HTMLElement {
           font-weight: 500;
         }
         .btn.primary {
-          background: var(--primary-color, #03a9f4);
+          background: var(--accent-color, var(--primary-color, #03a9f4));
           color: #fff;
           border-color: transparent;
         }
@@ -812,14 +836,41 @@ class PwaAppStudioPanel extends HTMLElement {
           margin-bottom: 10px;
           font-size: 13px;
         }
+        :host {height:100dvh;max-height:100%;min-height:0;--studio-accent:var(--accent-color,var(--primary-color,#03a9f4));}
+        .mobile-nav {display:none}
+        .topbar {background:var(--card-background-color);color:var(--primary-text-color)}
+        .topbar button,.tabs button,.device-toolbar button {min-height:44px;white-space:nowrap;border-radius:22px}
+        .card-box {border-radius:20px;padding:clamp(14px,2vw,24px)}
+        button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible {outline:3px solid var(--studio-accent);outline-offset:2px}
+        .device-bezel-wrap {position:relative;overflow:hidden;flex:none}
+        .device-bezel {position:absolute;left:50%;translate:-50% 0}
+        @media(max-width:1240px) {
+          :host {display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden}
+          .topbar {padding:8px 12px;gap:6px;flex-wrap:wrap}
+          .topbar-left {gap:6px}
+          .topbar strong {font-size:15px!important}
+          .menu-btn {display:inline-flex;align-items:center;justify-content:center;min-width:44px}
+          .topbar .btn {padding:8px 12px}
+          .workspace {display:block;min-width:0;overflow:hidden}
+          .workspace > * {display:none;height:100%;min-height:0;min-width:0;border:0;overflow:auto;overscroll-behavior:contain}
+          .workspace[data-pane=apps] .apps-pane,.workspace[data-pane=editor] .editor-pane,.workspace[data-pane=preview] .preview-pane {display:block}
+          .mobile-nav {display:flex;justify-content:space-around;background:var(--card-background-color);border-top:1px solid var(--divider-color);padding:4px 8px max(4px,env(safe-area-inset-bottom))}
+          .mobile-nav button {flex:1;display:grid;justify-items:center;gap:2px;padding:4px;border:0;background:transparent;color:inherit;font:inherit;font-size:12px;cursor:pointer}
+          .mobile-nav ha-icon {width:64px;padding:3px 20px;box-sizing:border-box;border-radius:18px}
+          .mobile-nav [aria-pressed=true] ha-icon {background:color-mix(in srgb,var(--studio-accent) 24%,transparent);color:var(--studio-accent)}
+          .tabs {flex-wrap:nowrap;overflow-x:auto;padding:3px 0 7px}
+          .field-grid {grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
+          input:not([type=checkbox]),select,textarea {font-size:16px;min-height:44px}
+          .preview-pane > * {margin-bottom:12px}
+        }
       </style>
 
       <div class="topbar">
         <div class="topbar-left">
-          <button class="menu-btn" id="toggle-menu-btn">☰</button>
+          <button class="menu-btn" id="toggle-menu-btn" aria-label="Menü öffnen"><ha-icon icon="mdi:menu"></ha-icon></button>
           <div>
-            <strong style="font-size:17px;">PWA App Studio</strong>
-            <span style="font-size:12px;opacity:0.75;margin-left:8px;">Admin Designer • ${this._apps.length} App(s)</span>
+            <strong style="font-size:17px;">PWA Web-App Studio</strong>
+
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
@@ -828,7 +879,7 @@ class PwaAppStudioPanel extends HTMLElement {
         </div>
       </div>
 
-      <div class="workspace">
+      <div class="workspace" data-pane="${this._mobilePane}">
         <aside class="apps-pane">
           <strong style="font-size:12px;text-transform:uppercase;opacity:0.7;">Deine PWAs</strong>
           ${
@@ -854,11 +905,11 @@ class PwaAppStudioPanel extends HTMLElement {
           ${this._errorMsg ? `<div class="banner-err">${this._esc(this._errorMsg)}</div>` : ""}
 
           <div class="tabs">
-            <button class="tab ${this._activeTab === "general" ? "active" : ""}" data-tab="general">1. Manifest & Optionen</button>
-            <button class="tab ${this._activeTab === "content" ? "active" : ""}" data-tab="content">2. Inhalt & Karten</button>
-            <button class="tab ${this._activeTab === "icon" ? "active" : ""}" data-tab="icon">3. App-Icon</button>
-            <button class="tab ${this._activeTab === "access" ? "active" : ""}" data-tab="access">4. Berechtigungen</button>
-            <button class="tab ${this._activeTab === "distribute" ? "active" : ""}" data-tab="distribute">5. QR & Installation</button>
+            <button class="tab ${this._activeTab === "general" ? "active" : ""}" data-tab="general">App</button>
+            <button class="tab ${this._activeTab === "content" ? "active" : ""}" data-tab="content">Inhalt</button>
+            <button class="tab ${this._activeTab === "icon" ? "active" : ""}" data-tab="icon">Icon</button>
+            <button class="tab ${this._activeTab === "access" ? "active" : ""}" data-tab="access">Freigabe</button>
+            <button class="tab ${this._activeTab === "distribute" ? "active" : ""}" data-tab="distribute">Installation</button>
           </div>
 
           ${this._renderActiveTabHtml(d, dashViews, detected)}
@@ -889,9 +940,25 @@ class PwaAppStudioPanel extends HTMLElement {
           </div>
         </aside>
       </div>
+      <nav class="mobile-nav" aria-label="Studio">
+        ${[["apps","view-grid-outline","Apps"],["editor","pencil-outline","Editor"],["preview","cellphone","Vorschau"]].map(([key,icon,label]) =>
+          `<button data-pane-target="${key}" aria-pressed="${this._mobilePane === key}"><ha-icon icon="mdi:${icon}"></ha-icon>${label}</button>`
+        ).join("")}
+      </nav>
     `;
 
     this._bindEvents();
+    this._previewObserver?.disconnect();
+    const wrap = this.shadowRoot.querySelector(".device-bezel-wrap");
+    const bezel = wrap.querySelector(".device-bezel");
+    this._previewObserver = new ResizeObserver(([entry]) => {
+      const width = entry.contentRect.width;
+      if (!width) return;
+      const scale = Math.min(1, width / frameW, dimBase.scale);
+      bezel.style.transform = "scale(" + scale + ")";
+      wrap.style.height = Math.ceil(frameH * scale + 16) + "px";
+    });
+    this._previewObserver.observe(wrap);
   }
 
   _renderActiveTabHtml(d, dashViews, detected) {
@@ -1237,6 +1304,15 @@ class PwaAppStudioPanel extends HTMLElement {
 
   _bindEvents() {
     const sr = this.shadowRoot;
+    for (const button of sr.querySelectorAll("[data-pane-target]")) {
+      button.onclick = () => {
+        this._mobilePane = button.dataset.paneTarget;
+        sr.querySelector(".workspace").dataset.pane = this._mobilePane;
+        for (const item of sr.querySelectorAll("[data-pane-target]")) {
+          item.setAttribute("aria-pressed", String(item === button));
+        }
+      };
+    }
     sr.getElementById("toggle-menu-btn")?.addEventListener("click", () => {
       this.dispatchEvent(new CustomEvent("hass-toggle-menu", { bubbles: true, composed: true }));
     });

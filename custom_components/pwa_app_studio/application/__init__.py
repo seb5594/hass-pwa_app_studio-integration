@@ -1,1 +1,1 @@
-'''Application layer for PWA App Studio.'''
+'''Application layer for PWA Web-App Studio.'''

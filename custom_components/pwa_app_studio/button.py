@@ -35,7 +35,8 @@ class PwaAppStudioOpenDesignerButton(ButtonEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=NAME,
-            manufacturer="PWA App Studio",
+            manufacturer="PWA Web-App Studio",
+            configuration_url=f"homeassistant://{PANEL_URL_PATH}",
             model="Home Assistant PWA Builder",
             sw_version=VERSION,
         )

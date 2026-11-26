@@ -1,1 +1,1 @@
-'''Domain layer for PWA App Studio.'''
+'''Domain layer for PWA Web-App Studio.'''

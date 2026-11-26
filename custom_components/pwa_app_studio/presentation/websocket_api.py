@@ -1,4 +1,4 @@
-'''WebSocket commands for PWA App Studio (Admin CRUD + ACL-checked runtime).'''
+'''WebSocket commands for PWA Web-App Studio (Admin CRUD + ACL-checked runtime).'''
 
 from __future__ import annotations
 

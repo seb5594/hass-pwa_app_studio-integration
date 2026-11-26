@@ -1,4 +1,4 @@
-'''Application use-case services for PWA App Studio.'''
+'''Application use-case services for PWA Web-App Studio.'''
 
 from __future__ import annotations
 

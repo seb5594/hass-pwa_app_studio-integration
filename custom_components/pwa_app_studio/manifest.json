@@ -1,6 +1,6 @@
 {
   "domain": "pwa_app_studio",
-  "name": "PWA App Studio",
+  "name": "PWA Web-App Studio",
   "codeowners": [
     "@seb5594"
   ],
@@ -19,6 +19,6 @@
     "segno>=1.6.0"
   ],
   "single_config_entry": true,
-  "version": "1.0.0",
+  "version": "2026.11.26",
   "integration_type": "service"
 }
