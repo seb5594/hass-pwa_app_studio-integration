@@ -4,8 +4,8 @@
 <p align="center">
   <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=seb5594&amp;repository=hass-pwa_app_studio-integration&amp;category=integration"><img src="https://img.shields.io/static/v1?label=HACS%20%C2%B7%20Marketplace&amp;message=Add%20integration&amp;color=41BDF5&amp;logo=homeassistantcommunitystore&amp;logoColor=white&amp;style=for-the-badge" alt="HACS · Marketplace" height="28"></a>
   <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/actions/workflows/compat.yml"><img src="https://img.shields.io/static/v1?label=home%20assistant&amp;message=%E2%89%A5%202021.12.0&amp;color=1877A5&amp;style=for-the-badge" alt="home assistant" height="28"></a><br>
-  <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/releases/tag/2026.11.26.90"><img src="https://img.shields.io/static/v1?label=integration%20version&amp;message=2026.11.26.90&amp;color=1877A5&amp;style=for-the-badge" alt="integration version" height="28"></a>
-  <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/releases"><img src="https://img.shields.io/github/downloads/seb5594/hass-pwa_app_studio-integration/2026.11.26.90/total?label=downloads&amp;color=1877A5&amp;style=for-the-badge" alt="downloads" height="28"></a><br>
+  <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/releases/tag/2026.11.26.91"><img src="https://img.shields.io/static/v1?label=integration%20version&amp;message=2026.11.26.91&amp;color=1877A5&amp;style=for-the-badge" alt="integration version" height="28"></a>
+  <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/releases"><img src="https://img.shields.io/github/downloads/seb5594/hass-pwa_app_studio-integration/2026.11.26.91/total?label=downloads&amp;color=1877A5&amp;style=for-the-badge" alt="downloads" height="28"></a><br>
   <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/seb5594/hass-pwa_app_studio-integration/ci.yml?branch=main&amp;label=checks&amp;style=flat" alt="checks" height="20"></a>
   <img src="https://img.shields.io/static/v1?label=tests&amp;message=2%20passed&amp;color=2F855A&amp;style=flat" alt="tests" height="20">
   <a href="https://github.com/seb5594/hass-pwa_app_studio-integration/issues"><img src="https://img.shields.io/github/issues/seb5594/hass-pwa_app_studio-integration?label=issues&amp;style=flat" alt="issues" height="20"></a><br>
@@ -116,6 +116,10 @@ Offline caching covers the app shell, icon and other public files. Cards, curren
 
 If you are still stuck, include your Core version, Studio version, device and the steps that reproduce the issue. [Report an issue](https://github.com/seb5594/hass-pwa_app_studio-integration/issues) · [Changelog](CHANGELOG.md) · [Architecture notes in German](docs/architekturpruefung.md)
 
+## Other languages
+
+[Français](docs/README.fr.md) · [Español](docs/README.es.md) · [Italiano](docs/README.it.md) · [Português](docs/README.pt.md) · [Português (Brasil)](docs/README.pt-BR.md) · [Nederlands](docs/README.nl.md) · [Polski](docs/README.pl.md) · [Čeština](docs/README.cs.md) · [Slovenčina](docs/README.sk.md) · [Magyar](docs/README.hu.md) · [Română](docs/README.ro.md) · [Български](docs/README.bg.md) · [Ελληνικά](docs/README.el.md) · [Svenska](docs/README.sv.md) · [Dansk](docs/README.da.md) · [Norsk](docs/README.nb.md) · [Suomi](docs/README.fi.md) · [Українська](docs/README.uk.md) · [Русский](docs/README.ru.md) · [Türkçe](docs/README.tr.md) · [简体中文](docs/README.zh-Hans.md) · [繁體中文](docs/README.zh-Hant.md) · [日本語](docs/README.ja.md) · [العربية](docs/README.ar.md) · [हिन्दी](docs/README.hi.md) · [עברית](docs/README.he.md) · [Bahasa Indonesia](docs/README.id.md) · [Hrvatski](docs/README.hr.md) · [Slovenščina](docs/README.sl.md) · [Eesti](docs/README.et.md) · [Latviešu](docs/README.lv.md) · [Lietuvių](docs/README.lt.md) · [Gaeilge](docs/README.ga.md) · [Malti](docs/README.mt.md) · [Íslenska](docs/README.is.md)
+
 <!-- support:begin (generated, shared text) -->
 ## Say thanks
 
@@ -133,7 +137,3 @@ If my work helped you or turned out to be useful, show your appreciation with a 
 
 Published under the [Apache License 2.0](LICENSE).
 <!-- license:end -->
-
-## Other languages
-
-[Français](docs/README.fr.md) · [Español](docs/README.es.md) · [Italiano](docs/README.it.md) · [Português](docs/README.pt.md) · [Português (Brasil)](docs/README.pt-BR.md) · [Nederlands](docs/README.nl.md) · [Polski](docs/README.pl.md) · [Čeština](docs/README.cs.md) · [Slovenčina](docs/README.sk.md) · [Magyar](docs/README.hu.md) · [Română](docs/README.ro.md) · [Български](docs/README.bg.md) · [Ελληνικά](docs/README.el.md) · [Svenska](docs/README.sv.md) · [Dansk](docs/README.da.md) · [Norsk](docs/README.nb.md) · [Suomi](docs/README.fi.md) · [Українська](docs/README.uk.md) · [Русский](docs/README.ru.md) · [Türkçe](docs/README.tr.md) · [简体中文](docs/README.zh-Hans.md) · [繁體中文](docs/README.zh-Hant.md) · [日本語](docs/README.ja.md) · [العربية](docs/README.ar.md) · [हिन्दी](docs/README.hi.md) · [עברית](docs/README.he.md) · [Bahasa Indonesia](docs/README.id.md) · [Hrvatski](docs/README.hr.md) · [Slovenščina](docs/README.sl.md) · [Eesti](docs/README.et.md) · [Latviešu](docs/README.lv.md) · [Lietuvių](docs/README.lt.md) · [Gaeilge](docs/README.ga.md) · [Malti](docs/README.mt.md) · [Íslenska](docs/README.is.md)
