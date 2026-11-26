@@ -1,62 +1,63 @@
 /* Admin-only PWA Web-App Studio Designer custom panel with Live Device Preview, Multi-Card Composer, Icon Studio & QR Distribution. */
 
 import { loadPwaCardHelpers } from "./pwa-card-helpers.js";
+import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
 
 const STUDIO_ACCENT = "#2563eb";
 const STUDIO_LOGO = new URL("./studio-logo.png", import.meta.url).href;
 
 const STEPS = [
-  { id: "general", label: "App", icon: "creation-outline", title: "Wie heißt deine App?", hint: "Wähle einen Namen, eine Farbe und den ersten Eindruck beim Öffnen." },
-  { id: "content", label: "Inhalt", icon: "view-dashboard-outline", title: "Was soll deine App zeigen?", hint: "Übernimm ein Dashboard oder stelle einzelne Karten zusammen." },
-  { id: "icon", label: "Symbol", icon: "shape-outline", title: "Woran erkennst du deine App?", hint: "Dieses Symbol erscheint auf dem Startbildschirm." },
-  { id: "access", label: "Zugriff", icon: "account-key-outline", title: "Wer darf die App öffnen?", hint: "Wähle die Personen aus, für die deine App gedacht ist." },
-  { id: "distribute", label: "Teilen", icon: "qrcode-scan", title: "Wie kommt die App aufs Handy?", hint: "Speichere deine Auswahl und öffne die App oder teile den QR-Code." },
+  { id: "general", label: "step_app", icon: "creation-outline", title: "general_title", hint: "general_hint" },
+  { id: "content", label: "step_content", icon: "view-dashboard-outline", title: "content_title", hint: "content_hint" },
+  { id: "icon", label: "step_icon", icon: "shape-outline", title: "icon_title", hint: "icon_hint" },
+  { id: "access", label: "step_access", icon: "account-key-outline", title: "access_title", hint: "access_hint" },
+  { id: "distribute", label: "step_share", icon: "qrcode-scan", title: "distribute_title", hint: "distribute_hint" },
 ];
 
-const CARD_PRESETS = {
+const cardPresets = (t) => ({
   tile: {
-    label: "Tile-Karte",
-    config: { type: "tile", entity: "sun.sun", name: "Beispiel Tile" },
+    label: t("preset_tile"),
+    config: { type: "tile", entity: "sun.sun", name: t("preset_tile_name") },
   },
   markdown: {
-    label: "Markdown-Text",
+    label: t("preset_markdown"),
     config: {
       type: "markdown",
       title: "Status",
-      content: "## Willkommen\nSonnenstand: **{{ states('sun.sun') }}**",
+      content: t("preset_markdown_content"),
     },
   },
   entities: {
-    label: "Entitäten-Liste",
+    label: t("preset_entities"),
     config: {
       type: "entities",
-      title: "Geräte",
+      title: t("preset_devices"),
       entities: ["sun.sun"],
     },
   },
   gauge: {
-    label: "Gauge / Pegel",
+    label: t("preset_gauge"),
     config: {
       type: "gauge",
       entity: "sensor.sun_next_dawn",
-      name: "Messwert",
+      name: t("preset_value"),
       min: 0,
       max: 100,
     },
   },
   weather: {
-    label: "Wetter-Karte",
+    label: t("preset_weather"),
     config: {
       type: "weather-forecast",
       entity: "weather.forecast_home",
     },
   },
-};
+});
 
 const DEVICE_DIMENSIONS = {
-  desktop: { label: "Computer", width: 1280, height: 800, scale: 0.46 },
-  tablet: { label: "Tablet", width: 768, height: 1024, scale: 0.56 },
-  smartphone: { label: "Smartphone", width: 390, height: 844, scale: 0.68 },
+  desktop: { label: "device_desktop", width: 1280, height: 800, scale: 0.46 },
+  tablet: { label: "device_tablet", width: 768, height: 1024, scale: 0.56 },
+  smartphone: { label: "device_smartphone", width: 390, height: 844, scale: 0.68 },
 };
 
 class PwaAppStudioPanel extends HTMLElement {
@@ -64,6 +65,7 @@ class PwaAppStudioPanel extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this._hass = null;
+    this._language = "en";
     this._panel = null;
     this._apps = [];
     this._dashboards = [];
@@ -96,9 +98,16 @@ class PwaAppStudioPanel extends HTMLElement {
       .replace(/'/g, "&#39;");
   }
 
+  _t(key, values) {
+    return studioMessage(this._language, key, values);
+  }
+
   set hass(value) {
     const isFirst = !this._hass && value;
     this._hass = value;
+    const language = studioLanguage(value);
+    const languageChanged = this._language !== language;
+    this._language = language;
     for (const el of this._previewCardElements) {
       try {
         el.hass = value;
@@ -106,9 +115,11 @@ class PwaAppStudioPanel extends HTMLElement {
         // Ignore transient updates
       }
     }
-    if (isFirst) {
-      this._bootstrap();
+    if (languageChanged) {
+      this._render();
+      this._renderDevicePreviewCards();
     }
+    if (isFirst) this._bootstrap();
   }
 
   set panel(value) {
@@ -140,13 +151,13 @@ class PwaAppStudioPanel extends HTMLElement {
     const hasNativePrompt = !isIos && "onbeforeinstallprompt" in window;
 
     let previewTarget = "desktop";
-    let osLabel = `Computer (${platform || "Desktop"} / ${isEdge ? "Edge" : "Browser"})`;
+    let osLabel = `${this._t("device_desktop")} (${platform || "Desktop"} / ${isEdge ? "Edge" : "Browser"})`;
     if (isIos) {
       previewTarget = isTablet ? "tablet" : "smartphone";
       osLabel = isTablet ? "iPadOS (Safari)" : "iOS (Safari)";
     } else if (isAndroid) {
       previewTarget = isTablet ? "tablet" : "smartphone";
-      osLabel = isTablet ? "Android Tablet" : "Android Smartphone";
+      osLabel = isTablet ? "Android Tablet" : this._t("device_android_phone");
     }
 
     return {
@@ -163,7 +174,7 @@ class PwaAppStudioPanel extends HTMLElement {
   async _bootstrap() {
     if (!this._hass) return;
     if (!this._hass.user?.is_admin) {
-      this._errorMsg = "Zugriff nur für Home-Assistant-Administratoren.";
+      this._errorMsg = this._t("only_admin");
       this._render();
       return;
     }
@@ -187,7 +198,7 @@ class PwaAppStudioPanel extends HTMLElement {
         this._newAppDraft();
       }
     } catch (err) {
-      this._errorMsg = err?.message || "Fehler beim Laden der PWA-App-Studio-Daten.";
+      this._errorMsg = err?.message || this._t("load_failed");
       this._render();
     }
   }
@@ -215,7 +226,7 @@ class PwaAppStudioPanel extends HTMLElement {
       manifest: {
         name: "Smart Home App",
         short_name: "SmartHome",
-        description: "Maßgeschneiderte Home Assistant PWA",
+        description: this._t("draft_description"),
         display: "standalone",
         orientation: "any",
         theme_color: STUDIO_ACCENT,
@@ -382,7 +393,7 @@ class PwaAppStudioPanel extends HTMLElement {
     this._saving = true;
     const draft = this._draft;
     const selectedId = this._selectedAppId;
-    this._statusMsg = "Speichere PWA...";
+    this._statusMsg = this._t("saving");
     this._errorMsg = "";
     this._render();
 
@@ -406,11 +417,11 @@ class PwaAppStudioPanel extends HTMLElement {
       const appsRes = await this._hass.callWS({ type: "pwa_app_studio/apps/list" });
       this._apps = appsRes.apps || [];
       if (this._draft !== draft) return;
-      this._statusMsg = `PWA '${saved.manifest.name}' gespeichert (v${saved.version}).`;
+      this._statusMsg = this._t("saved", { name: saved.manifest.name, version: saved.version });
       this._selectApp(saved.app_id);
     } catch (err) {
       if (this._draft !== draft) return;
-      this._errorMsg = err?.message || "Speichern fehlgeschlagen.";
+      this._errorMsg = err?.message || this._t("save_failed");
       this._statusMsg = "";
       this._render();
     } finally {
@@ -420,19 +431,19 @@ class PwaAppStudioPanel extends HTMLElement {
 
   async _deleteApp(appId) {
     if (!this._hass || !appId) return;
-    if (!confirm("Diese PWA wirklich unwiderruflich löschen?")) return;
+    if (!confirm(this._t("delete_confirm"))) return;
     try {
       await this._hass.callWS({ type: "pwa_app_studio/apps/delete", app_id: appId });
       const appsRes = await this._hass.callWS({ type: "pwa_app_studio/apps/list" });
       this._apps = appsRes.apps || [];
-      this._statusMsg = "PWA gelöscht.";
+      this._statusMsg = this._t("deleted");
       if (this._apps.length > 0) {
         this._selectApp(this._apps[0].app_id);
       } else {
         this._newAppDraft();
       }
     } catch (err) {
-      this._errorMsg = err?.message || "Löschen fehlgeschlagen.";
+      this._errorMsg = err?.message || this._t("delete_failed");
       this._render();
     }
   }
@@ -452,7 +463,7 @@ class PwaAppStudioPanel extends HTMLElement {
     } catch (err) {
       if (appId !== this._selectedAppId) return;
       this._qrInfo = null;
-      this._errorMsg = err?.message || "QR-Code konnte nicht generiert werden.";
+      this._errorMsg = err?.code === "no_internal_url" ? this._t("qr_local_url") : err?.message || this._t("qr_failed");
       this._render();
     }
   }
@@ -466,10 +477,10 @@ class PwaAppStudioPanel extends HTMLElement {
     let helpers;
     try {
       helpers = await loadPwaCardHelpers(this._hass);
-    } catch (err) {
+    } catch {
       const message = document.createElement("div");
       message.className = "preview-empty";
-      message.textContent = err?.message || "Die Kartenvorschau ist gerade nicht verfügbar.";
+      message.textContent = this._t("card_preview_unavailable");
       stage.appendChild(message);
       return;
     }
@@ -496,7 +507,7 @@ class PwaAppStudioPanel extends HTMLElement {
     }
 
     if (!items.length) {
-      stage.innerHTML = `<div class="preview-empty">Keine Karten in dieser Auswahl. Füge Karten im Tab "Inhalt & Karten" hinzu.</div>`;
+      stage.innerHTML = `<div class="preview-empty">${this._t("card_preview_empty")}</div>`;
       return;
     }
 
@@ -516,7 +527,7 @@ class PwaAppStudioPanel extends HTMLElement {
         wrap.appendChild(el);
         this._previewCardElements.push(el);
       } catch (err) {
-        wrap.innerHTML = `<div class="preview-err">Kartenfehler (${this._esc(item.config?.type || "?")}): ${this._esc(err?.message || err)}</div>`;
+        wrap.innerHTML = `<div class="preview-err">${this._esc(this._t("card_error", { type: item.config?.type || "?", message: err?.message || err }))}</div>`;
       }
       stage.appendChild(wrap);
     }
@@ -535,14 +546,15 @@ class PwaAppStudioPanel extends HTMLElement {
   }
 
   _cardPresets() {
+    const presets = cardPresets((key) => this._t(key));
     const [year, month] = (this._hass?.config?.version || "").split(".").map(Number);
     if (year === 2021 || (year === 2022 && month < 11)) {
       return {
-        ...CARD_PRESETS,
-        tile: { label: "Schaltfläche", config: { type: "button", entity: "sun.sun", name: "Sonnenstand" } },
+        ...presets,
+        tile: { label: this._t("preset_button"), config: { type: "button", entity: "sun.sun", name: this._t("preset_sun") } },
       };
     }
-    return CARD_PRESETS;
+    return presets;
   }
 
   _addPresetCard(presetKey) {
@@ -565,7 +577,7 @@ class PwaAppStudioPanel extends HTMLElement {
     this._draft.content.cards.push({
       id: `card-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
       order: this._draft.content.cards.length,
-      title: cardConfig.title || cardConfig.name || cardConfig.type || "Importierte Karte",
+      title: cardConfig.title || cardConfig.name || cardConfig.type || this._t("imported_card"),
       col_span: 1,
       config: JSON.parse(JSON.stringify(cardConfig)),
     });
@@ -584,7 +596,7 @@ class PwaAppStudioPanel extends HTMLElement {
         : views[0]);
     const cards = view?.cards || [];
     if (!cards.length) {
-      this._errorMsg = "Die ausgewählte View enthält keine direkt importierbaren Karten.";
+      this._errorMsg = this._t("no_importable_cards");
       this._render();
       return;
     }
@@ -593,19 +605,19 @@ class PwaAppStudioPanel extends HTMLElement {
       this._draft.content.cards.push({
         id: `card-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
         order: this._draft.content.cards.length,
-        title: cfg.title || cfg.name || cfg.type || "Dashboard-Karte",
+        title: cfg.title || cfg.name || cfg.type || this._t("dashboard_card"),
         col_span: 1,
         config: JSON.parse(JSON.stringify(cfg)),
       });
     }
-    this._statusMsg = `${cards.length} Karte(n) aus '${dash.title}' in den Karten-Composer übernommen.`;
+    this._statusMsg = this._t("cards_imported", { count: cards.length, dashboard: dash.title });
     this._render();
     this._renderDevicePreviewCards();
   }
 
   _handleInstallOnCurrentDevice() {
     if (!this._selectedAppId || !this._draft?.slug) {
-      this._errorMsg = "Bitte speichere die PWA zuerst, bevor du sie installierst.";
+      this._errorMsg = this._t("save_before_install");
       this._render();
       return;
     }
@@ -616,10 +628,11 @@ class PwaAppStudioPanel extends HTMLElement {
   }
 
   _render() {
+    this.lang = this._language;
     if (!this._draft) {
       this.shadowRoot.innerHTML = `
         <style>:host{display:block;padding:24px;color:var(--primary-text-color,#fff);background:var(--primary-background-color,#111827);min-height:100vh;}</style>
-        <div>${this._esc(this._errorMsg || "Lade PWA Web-App Studio...")}</div>
+        <div>${this._esc(this._errorMsg || this._t("loading"))}</div>
       `;
       return;
     }
@@ -959,22 +972,22 @@ class PwaAppStudioPanel extends HTMLElement {
 
       <div class="topbar">
         <div class="topbar-left">
-          <button class="menu-btn" id="toggle-menu-btn" aria-label="Menü öffnen"><ha-icon icon="mdi:menu"></ha-icon></button>
+          <button class="menu-btn" id="toggle-menu-btn" aria-label="${this._t("open_menu")}"><ha-icon icon="mdi:menu"></ha-icon></button>
           <img class="studio-logo" src="${STUDIO_LOGO}" width="40" height="40" alt="" />
           <strong style="font-size:17px;">PWA Web-App Studio</strong>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
-          <button class="btn" id="new-app-btn">+ Neue PWA</button>
-          <button class="btn primary" id="save-app-btn">Speichern</button>
+          <button class="btn" id="new-app-btn">${this._t("new_app")}</button>
+          <button class="btn primary" id="save-app-btn">${this._t("save")}</button>
         </div>
       </div>
 
       <div class="workspace" data-pane="${this._mobilePane}">
         <aside class="apps-pane">
-          <strong style="font-size:12px;text-transform:uppercase;opacity:0.7;">Deine PWAs</strong>
+          <strong style="font-size:12px;text-transform:uppercase;opacity:0.7;">${this._t("your_apps")}</strong>
           ${
             this._apps.length === 0
-              ? `<div style="font-size:13px;opacity:0.7;">Noch keine App gespeichert.</div>`
+              ? `<div style="font-size:13px;opacity:0.7;">${this._t("no_apps")}</div>`
               : this._apps
                   .map(
                     (app) => `
@@ -983,7 +996,7 @@ class PwaAppStudioPanel extends HTMLElement {
                     <div style="font-weight:600;font-size:13px;">${this._esc(app.manifest.name)}</div>
                     <div style="font-size:11px;opacity:0.7;">/${this._esc(app.slug)}/ • v${app.version}</div>
                   </div>
-                  <button class="btn danger del-app-btn" data-del="${this._esc(app.app_id)}" style="padding:4px 8px;font-size:11px;">✕</button>
+                  <button class="btn danger del-app-btn" aria-label="${this._t("delete_app")}" data-del="${this._esc(app.app_id)}" style="padding:4px 8px;font-size:11px;">✕</button>
                 </div>`
                   )
                   .join("")
@@ -994,44 +1007,44 @@ class PwaAppStudioPanel extends HTMLElement {
           ${this._statusMsg ? `<div class="banner-ok" role="status">${this._esc(this._statusMsg)}</div>` : ""}
           ${this._errorMsg ? `<div class="banner-err" role="alert">${this._esc(this._errorMsg)}</div>` : ""}
 
-          <nav class="step-nav" aria-label="Einrichtungsschritte">
-            ${STEPS.map((item, i) => `<button data-tab="${item.id}" aria-label="Schritt ${i + 1}: ${item.label}" ${item === step ? 'aria-current="step"' : ""}>
-              <ha-icon icon="mdi:${item.icon}" aria-hidden="true"></ha-icon><span>${item.label}</span>
+          <nav class="step-nav" aria-label="${this._t("setup_steps")}">
+            ${STEPS.map((item, i) => `<button data-tab="${item.id}" aria-label="${this._t("step_label", { index: i + 1, name: this._t(item.label) })}" ${item === step ? 'aria-current="step"' : ""}>
+              <ha-icon icon="mdi:${item.icon}" aria-hidden="true"></ha-icon><span>${this._t(item.label)}</span>
             </button>`).join("")}
           </nav>
           <header class="step-header">
-            <span>Schritt ${index + 1} von ${STEPS.length}</span>
-            <h1 id="step-title" tabindex="-1">${step.title}</h1>
-            <p>${step.hint}</p>
+            <span>${this._t("step_progress", { index: index + 1, total: STEPS.length })}</span>
+            <h1 id="step-title" tabindex="-1">${this._t(step.title)}</h1>
+            <p>${this._t(step.hint)}</p>
           </header>
           ${this._renderActiveTabHtml(d, dashViews, detected)}
           <div class="step-actions">
-            ${index ? `<button class="btn" data-tab="${STEPS[index - 1].id}">Zurück</button>` : ""}
+            ${index ? `<button class="btn" data-tab="${STEPS[index - 1].id}">${this._t("back")}</button>` : ""}
             ${index + 1 < STEPS.length
-              ? `<button class="btn primary" data-tab="${STEPS[index + 1].id}">Weiter zu ${STEPS[index + 1].label} →</button>`
-              : `<button class="btn primary" id="finish-btn">App speichern</button>`}
+              ? `<button class="btn primary" data-tab="${STEPS[index + 1].id}">${this._t("next", { name: this._t(STEPS[index + 1].label) })}</button>`
+              : `<button class="btn primary" id="finish-btn">${this._t("finish")}</button>`}
           </div>
         </section>
 
         <aside class="preview-pane">
           <div class="device-toolbar">
-            <button class="tab ${this._previewDevice === "desktop" ? "active" : ""}" data-dev="desktop">Computer</button>
-            <button class="tab ${this._previewDevice === "tablet" ? "active" : ""}" data-dev="tablet">Tablet</button>
-            <button class="tab ${this._previewDevice === "smartphone" ? "active" : ""}" data-dev="smartphone">Smartphone</button>
+            <button class="tab ${this._previewDevice === "desktop" ? "active" : ""}" data-dev="desktop">${this._t("device_desktop")}</button>
+            <button class="tab ${this._previewDevice === "tablet" ? "active" : ""}" data-dev="tablet">${this._t("device_tablet")}</button>
+            <button class="tab ${this._previewDevice === "smartphone" ? "active" : ""}" data-dev="smartphone">${this._t("device_smartphone")}</button>
             ${
               this._previewDevice !== "desktop"
-                ? `<button class="btn" id="rotate-dev-btn">⟳ Drehen</button>`
+                ? `<button class="btn" id="rotate-dev-btn">${this._t("rotate")}</button>`
                 : ""
             }
           </div>
           <div style="font-size:12px;opacity:0.75;">
-            Vorschau: ${dimBase.label} (${frameW}×${frameH}px) • Erkannt: ${this._esc(detected.osLabel)}
+            ${this._t("preview")}: ${this._t(dimBase.label)} (${frameW}×${frameH}px) • ${this._t("detected")}: ${this._esc(detected.osLabel)}
           </div>
           <div class="device-bezel-wrap">
             <div class="device-bezel">
               <div class="device-header">
                 <span>${this._esc(d.manifest.name)}</span>
-                <span style="font-size:12px;opacity:0.9;">${this._esc(d.manifest.display)}</span>
+                <span style="font-size:12px;opacity:0.9;">${this._t("display_" + d.manifest.display.replace("-", "_"))}</span>
               </div>
               <div id="preview-stage"></div>
             </div>
@@ -1039,7 +1052,7 @@ class PwaAppStudioPanel extends HTMLElement {
         </aside>
       </div>
       <nav class="mobile-nav" aria-label="Studio">
-        ${[["apps","view-grid-outline","Apps"],["editor","pencil-outline","Editor"],["preview","cellphone","Vorschau"]].map(([key,icon,label]) =>
+        ${[["apps","view-grid-outline","Apps"],["editor","pencil-outline","Editor"],["preview","cellphone",this._t("preview")]].map(([key,icon,label]) =>
           `<button data-pane-target="${key}" aria-pressed="${this._mobilePane === key}"><ha-icon icon="mdi:${icon}"></ha-icon>${label}</button>`
         ).join("")}
       </nav>
@@ -1064,70 +1077,70 @@ class PwaAppStudioPanel extends HTMLElement {
       return `
         <div class="card-box">
           <div class="field-grid">
-            <label>App-Name
+            <label>${this._t("name")}
               <input id="f-name" value="${this._esc(d.manifest.name)}" />
             </label>
-            <label>Kurzname (Homescreen)
+            <label>${this._t("short_name")}
               <input id="f-short-name" value="${this._esc(d.manifest.short_name)}" />
             </label>
-            <label>Akzentfarbe
+            <label>${this._t("accent_color")}
               <input type="color" id="f-theme" value="${this._esc(d.manifest.theme_color)}" />
             </label>
-            <label>Hintergrundfarbe
+            <label>${this._t("background_color")}
               <input type="color" id="f-bg" value="${this._esc(d.manifest.background_color)}" />
             </label>
           </div>
-          <label style="margin-top:10px;">Beschreibung
+          <label style="margin-top:10px;">${this._t("description")}
             <input id="f-desc" value="${this._esc(d.manifest.description)}" />
           </label>
-          <label style="margin-top:12px">Animation beim Öffnen
+          <label style="margin-top:12px">${this._t("launch_animation")}
             <select id="f-launch">
-              ${[["ripple","Sanfte Wellen"],["glow","Leuchtschein"],["still","Ruhiges Standbild"]].map(([key,title]) =>
+              ${[["ripple",this._t("launch_ripple")],["glow",this._t("launch_glow")],["still",this._t("launch_still")]].map(([key,title]) =>
                 `<option value="${key}" ${(d.manifest.launch_style || "ripple") === key ? "selected" : ""}>${title}</option>`).join("")}
             </select>
           </label>
-          <details class="launch-preview"><summary>Startanimation ansehen</summary>
+          <details class="launch-preview"><summary>${this._t("show_launch")}</summary>
             <div id="launch-sample"></div>
           </details>
-          <details><summary>Weitere Einstellungen</summary>
+          <details><summary>${this._t("advanced")}</summary>
           <div class="field-grid">
-            <label>URL-Slug (optional)
-              <input id="f-slug" placeholder="automatisch" value="${this._esc(d.slug)}" />
+            <label>${this._t("slug")}
+              <input id="f-slug" placeholder="${this._t("automatic")}" value="${this._esc(d.slug)}" />
             </label>
-            <label>Display-Modus
+            <label>${this._t("display_mode")}
               <select id="f-display">
                 ${["standalone", "fullscreen", "minimal-ui", "browser"]
                   .map(
                     (m) =>
-                      `<option value="${m}" ${d.manifest.display === m ? "selected" : ""}>${m}</option>`
+                      `<option value="${m}" ${d.manifest.display === m ? "selected" : ""}>${this._t("display_" + m.replace("-", "_"))}</option>`
                   )
                   .join("")}
               </select>
             </label>
-            <label>Ausrichtung
+            <label>${this._t("orientation")}
               <select id="f-orientation">
                 ${["any", "natural", "portrait", "landscape"]
                   .map(
                     (o) =>
-                      `<option value="${o}" ${d.manifest.orientation === o ? "selected" : ""}>${o}</option>`
+                      `<option value="${o}" ${d.manifest.orientation === o ? "selected" : ""}>${this._t("orientation_" + o)}</option>`
                   )
                   .join("")}
               </select>
             </label>
-            <label>Sprache / Richtung
+            <label>${this._t("language_direction")}
               <div style="display:flex;gap:6px;">
                 <input id="f-lang" value="${this._esc(d.manifest.lang)}" style="width:60%;" />
                 <select id="f-dir" style="width:40%;">
-                  <option value="ltr" ${d.manifest.dir === "ltr" ? "selected" : ""}>LTR</option>
-                  <option value="rtl" ${d.manifest.dir === "rtl" ? "selected" : ""}>RTL</option>
+                  <option value="ltr" ${d.manifest.dir === "ltr" ? "selected" : ""}>${this._t("direction_ltr")}</option>
+                  <option value="rtl" ${d.manifest.dir === "rtl" ? "selected" : ""}>${this._t("direction_rtl")}</option>
                 </select>
               </div>
             </label>
           </div>
           <div class="field-grid" style="margin-top:12px;">
-            <label class="inline"><input type="checkbox" id="f-offline" ${d.manifest.offline_enabled ? "checked" : ""} /> Startbildschirm offline verfügbar machen</label>
-            <label class="inline"><input type="checkbox" id="f-hide-hdr" ${d.manifest.hide_ha_header ? "checked" : ""} /> PWA-Header ausblenden</label>
-            <label class="inline"><input type="checkbox" id="f-kiosk" ${d.manifest.kiosk_mode ? "checked" : ""} /> Kiosk-Vollmodus</label>
+            <label class="inline"><input type="checkbox" id="f-offline" ${d.manifest.offline_enabled ? "checked" : ""} /> ${this._t("offline_shell")}</label>
+            <label class="inline"><input type="checkbox" id="f-hide-hdr" ${d.manifest.hide_ha_header ? "checked" : ""} /> ${this._t("hide_header")}</label>
+            <label class="inline"><input type="checkbox" id="f-kiosk" ${d.manifest.kiosk_mode ? "checked" : ""} /> ${this._t("kiosk")}</label>
           </div></details>
         </div>
       `;
@@ -1149,27 +1162,27 @@ class PwaAppStudioPanel extends HTMLElement {
       return `
         <div class="card-box">
           <div class="field-grid">
-            <label>Inhaltsquelle
+            <label>${this._t("content_source")}
               <select id="c-source-mode">
-                <option value="lovelace_dashboard" ${d.content.source_mode === "lovelace_dashboard" ? "selected" : ""}>Ein vorhandenes Dashboard</option>
-                <option value="lovelace_cards" ${d.content.source_mode === "lovelace_cards" ? "selected" : ""}>Einzelne Karten zusammenstellen</option>
+                <option value="lovelace_dashboard" ${d.content.source_mode === "lovelace_dashboard" ? "selected" : ""}>${this._t("existing_dashboard")}</option>
+                <option value="lovelace_cards" ${d.content.source_mode === "lovelace_cards" ? "selected" : ""}>${this._t("pick_cards")}</option>
               </select>
             </label>
-            <label>Layout-Modus
+            <label>${this._t("layout")}
               <select id="c-layout-mode">
-                <option value="grid" ${d.content.layout_mode === "grid" ? "selected" : ""}>Grid (Spalten)</option>
-                <option value="stack" ${d.content.layout_mode === "stack" ? "selected" : ""}>Vertikaler Stapel (1 Spalte)</option>
-                <option value="masonry" ${d.content.layout_mode === "masonry" ? "selected" : ""}>Masonry</option>
+                <option value="grid" ${d.content.layout_mode === "grid" ? "selected" : ""}>${this._t("layout_grid")}</option>
+                <option value="stack" ${d.content.layout_mode === "stack" ? "selected" : ""}>${this._t("layout_stack")}</option>
+                <option value="masonry" ${d.content.layout_mode === "masonry" ? "selected" : ""}>${this._t("layout_masonry")}</option>
               </select>
             </label>
-            <label>Spalten (Tablet/Desktop)
+            <label>${this._t("columns_desktop")}
               <input type="number" min="1" max="4" id="c-grid-cols" value="${d.content.grid_columns}" />
             </label>
-            <label>Standard-Vorschaugerät
+            <label>${this._t("default_preview")}
               <select id="c-default-dev">
-                <option value="desktop" ${d.content.default_preview_device === "desktop" ? "selected" : ""}>Computer</option>
-                <option value="tablet" ${d.content.default_preview_device === "tablet" ? "selected" : ""}>Tablet</option>
-                <option value="smartphone" ${d.content.default_preview_device === "smartphone" ? "selected" : ""}>Smartphone</option>
+                <option value="desktop" ${d.content.default_preview_device === "desktop" ? "selected" : ""}>${this._t("device_desktop")}</option>
+                <option value="tablet" ${d.content.default_preview_device === "tablet" ? "selected" : ""}>${this._t("device_tablet")}</option>
+                <option value="smartphone" ${d.content.default_preview_device === "smartphone" ? "selected" : ""}>${this._t("device_smartphone")}</option>
               </select>
             </label>
           </div>
@@ -1180,7 +1193,7 @@ class PwaAppStudioPanel extends HTMLElement {
             ? `
           <div class="card-box">
             <div class="field-grid">
-              <label>Lovelace Dashboard auswählen
+              <label>${this._t("choose_dashboard")}
                 <select id="c-dashboard">
                   ${this._dashboards
                     .map(
@@ -1190,9 +1203,9 @@ class PwaAppStudioPanel extends HTMLElement {
                     .join("")}
                 </select>
               </label>
-              <label>Ziel-Ansicht (View, optional)
+              <label>${this._t("target_view")}
                 <select id="c-view-path">
-                  <option value="">Alle Views / Standard-View</option>
+                  <option value="">${this._t("all_views")}</option>
                   ${dashViews
                     .map(
                       (vw) =>
@@ -1203,15 +1216,15 @@ class PwaAppStudioPanel extends HTMLElement {
               </label>
             </div>
             <div style="margin-top:12px;">
-              <button class="btn" id="c-import-view-btn">Karten dieser View als bearbeitbare Liste übernehmen</button>
+              <button class="btn" id="c-import-view-btn">${this._t("import_view")}</button>
             </div>
           </div>`
             : `
           <div class="card-box">
             <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;">
-              <label style="flex:1;min-width:190px;">Vorhandene Karte aus Dashboard übernehmen
+              <label style="flex:1;min-width:190px;">${this._t("import_card")}
                 <select id="c-import-select">
-                  <option value="">-- Karte wählen --</option>
+                  <option value="">${this._t("choose_card")}</option>
                   ${importedCards
                     .map(
                       (item, idx) => `<option value="${idx}">${this._esc(item.label)}</option>`
@@ -1219,7 +1232,7 @@ class PwaAppStudioPanel extends HTMLElement {
                     .join("")}
                 </select>
               </label>
-              <button class="btn" id="c-import-btn">Hinzufügen</button>
+              <button class="btn" id="c-import-btn">${this._t("add")}</button>
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">
               ${Object.entries(this._cardPresets())
@@ -1232,31 +1245,31 @@ class PwaAppStudioPanel extends HTMLElement {
           </div>
 
           <div class="card-box">
-            <strong>Karten-Reihenfolge (${d.content.cards.length} Karten — Drag & Drop oder Pfeile)</strong>
+            <strong>${this._t("card_order", { count: d.content.cards.length })}</strong>
             ${
               d.content.cards.length === 0
-                ? `<div style="font-size:13px;opacity:0.7;margin-top:8px;">Noch keine Karten hinzugefügt.</div>`
+                ? `<div style="font-size:13px;opacity:0.7;margin-top:8px;">${this._t("no_cards")}</div>`
                 : d.content.cards
                     .map(
                       (card, idx) => `
                   <div class="card-list-item" draggable="true" data-card-idx="${idx}">
                     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-                      <strong>#${idx + 1} ${this._esc(card.title || card.config?.type || "Karte")}</strong>
+                      <strong>#${idx + 1} ${this._esc(card.title || card.config?.type || this._t("card"))}</strong>
                       <div style="display:flex;gap:4px;align-items:center;">
-                        <select class="card-span-sel" data-idx="${idx}" style="width:92px;padding:4px;">
+                        <select class="card-span-sel" aria-label="${this._t("card_columns")}" data-idx="${idx}" style="width:92px;padding:4px;">
                           ${[1, 2, 3, 4]
                             .map(
                               (sp) =>
-                                `<option value="${sp}" ${card.col_span === sp ? "selected" : ""}>${sp} Spalte(n)</option>`
+                                `<option value="${sp}" ${card.col_span === sp ? "selected" : ""}>${this._t(sp === 1 ? "column_one" : "column_many", { count: sp })}</option>`
                             )
                             .join("")}
                         </select>
-                        <button class="btn card-up-btn" data-idx="${idx}">▲</button>
-                        <button class="btn card-dn-btn" data-idx="${idx}">▼</button>
-                        <button class="btn danger card-rm-btn" data-idx="${idx}">✕</button>
+                        <button class="btn card-up-btn" aria-label="${this._t("move_up")}" data-idx="${idx}">▲</button>
+                        <button class="btn card-dn-btn" aria-label="${this._t("move_down")}" data-idx="${idx}">▼</button>
+                        <button class="btn danger card-rm-btn" aria-label="${this._t("remove_card")}" data-idx="${idx}">✕</button>
                       </div>
                     </div>
-                    <textarea class="card-json-edit" data-idx="${idx}" rows="4" style="margin-top:8px;font-family:monospace;font-size:12px;">${this._esc(JSON.stringify(card.config, null, 2))}</textarea>
+                    <textarea class="card-json-edit" aria-label="${this._t("card_config")}" data-idx="${idx}" rows="4" style="margin-top:8px;font-family:monospace;font-size:12px;">${this._esc(JSON.stringify(card.config, null, 2))}</textarea>
                   </div>`
                     )
                     .join("")
@@ -1269,47 +1282,47 @@ class PwaAppStudioPanel extends HTMLElement {
     if (this._activeTab === "icon") {
       const ic = d.icon;
       const cornerOpts = [
-        ["bottom_right", "Unten rechts"],
-        ["top_right", "Oben rechts"],
-        ["bottom_left", "Unten links"],
-        ["top_left", "Oben links"],
+        ["bottom_right", this._t("bottom_right")],
+        ["top_right", this._t("top_right")],
+        ["bottom_left", this._t("bottom_left")],
+        ["top_left", this._t("top_left")],
       ];
       return `
         <div class="card-box" style="display:flex;gap:16px;align-items:center;">
-          <img id="live-icon-img" src="${this._iconPreviewUrl || ""}" alt="Icon Vorschau" style="width:96px;height:96px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);background:#0f172a;object-fit:cover;" />
+          <img id="live-icon-img" src="${this._iconPreviewUrl || ""}" alt="${this._t("icon_preview")}" style="width:96px;height:96px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);background:#0f172a;object-fit:cover;" />
           <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
-            <label>Icon-Modus
+            <label>${this._t("icon_mode")}
               <select id="i-mode">
-                <option value="ha_default" ${ic.mode === "ha_default" ? "selected" : ""}>Offizielles Home Assistant App-Icon</option>
-                <option value="mdi_icon" ${ic.mode === "mdi_icon" ? "selected" : ""}>Home Assistant / MDI Icon</option>
-                <option value="ha_with_badge" ${ic.mode === "ha_with_badge" ? "selected" : ""}>HA App-Icon + kleines selektiertes Icon in Ecke</option>
-                <option value="icon_with_ha_badge" ${ic.mode === "icon_with_ha_badge" ? "selected" : ""}>Selektiertes/Upload Icon + kleines HA Icon in Ecke</option>
-                <option value="uploaded" ${ic.mode === "uploaded" ? "selected" : ""}>Eigenes App-Icon hochladen</option>
-                <option value="dashboard_default" ${ic.mode === "dashboard_default" ? "selected" : ""}>Standard-Icon des gewählten Lovelace Dashboards</option>
+                <option value="ha_default" ${ic.mode === "ha_default" ? "selected" : ""}>${this._t("icon_ha")}</option>
+                <option value="mdi_icon" ${ic.mode === "mdi_icon" ? "selected" : ""}>${this._t("icon_mdi")}</option>
+                <option value="ha_with_badge" ${ic.mode === "ha_with_badge" ? "selected" : ""}>${this._t("icon_ha_badge")}</option>
+                <option value="icon_with_ha_badge" ${ic.mode === "icon_with_ha_badge" ? "selected" : ""}>${this._t("icon_custom_badge")}</option>
+                <option value="uploaded" ${ic.mode === "uploaded" ? "selected" : ""}>${this._t("icon_uploaded")}</option>
+                <option value="dashboard_default" ${ic.mode === "dashboard_default" ? "selected" : ""}>${this._t("icon_dashboard")}</option>
               </select>
             </label>
-            <button class="btn" id="i-use-dash-icon-btn">Dashboard-Icon in Haupt-MDI übernehmen</button>
+            <button class="btn" id="i-use-dash-icon-btn">${this._t("apply_dashboard_icon")}</button>
           </div>
         </div>
 
         <div class="card-box">
           <div class="field-grid">
-            <label>Haupt-MDI-Icon (z. B. mdi:sofa)
+            <label>${this._t("main_icon")}
               <input id="i-mdi" value="${this._esc(ic.mdi_icon)}" />
             </label>
-            <label>Icon-Vordergrundfarbe
+            <label>${this._t("icon_foreground")}
               <input type="color" id="i-fg" value="${this._esc(ic.icon_color)}" />
             </label>
-            <label>Icon-Hintergrundfarbe
+            <label>${this._t("icon_background")}
               <input type="color" id="i-bg" value="${this._esc(ic.bg_color)}" />
             </label>
-            <label>Ecken-Abrundung (%)
+            <label>${this._t("icon_radius")}
               <input type="number" min="0" max="50" id="i-radius" value="${ic.corner_radius_pct}" />
             </label>
-            <label>Badge-MDI-Icon
+            <label>${this._t("badge_icon")}
               <input id="i-badge-mdi" value="${this._esc(ic.badge_icon)}" />
             </label>
-            <label>Badge-Ecke
+            <label>${this._t("badge_corner")}
               <select id="i-badge-pos">
                 ${cornerOpts
                   .map(
@@ -1319,15 +1332,15 @@ class PwaAppStudioPanel extends HTMLElement {
                   .join("")}
               </select>
             </label>
-            <label>Badge-Icon-Farbe
+            <label>${this._t("badge_color")}
               <input type="color" id="i-badge-fg" value="${this._esc(ic.badge_color)}" />
             </label>
-            <label>Badge-Hintergrundfarbe
+            <label>${this._t("badge_background")}
               <input type="color" id="i-badge-bg" value="${this._esc(ic.badge_bg_color)}" />
             </label>
           </div>
           <div style="margin-top:12px;">
-            <label>Eigenes Icon hochladen (PNG / JPEG / WebP)
+            <label>${this._t("upload_icon")}
               <input type="file" id="i-upload" accept="image/png,image/jpeg,image/webp" />
             </label>
           </div>
@@ -1341,24 +1354,24 @@ class PwaAppStudioPanel extends HTMLElement {
       const selectable = this._users.filter(u => !u.is_admin && (mode !== "guest" || u.local_only));
       return `
         <div class="card-box">
-          <label>Freigabe für diese App
+          <label>${this._t("app_access")}
             <select id="access-mode">
-              ${[["all","Alle angemeldeten Personen"],["selected","Ausgewählte Personen"],["guest","🏡 Gäste im Heimnetz"],["admin","Nur Administratoren"]].map(([key,title]) =>
+              ${[["all",this._t("access_all")],["selected",this._t("access_selected")],["guest",this._t("access_guest")],["admin",this._t("access_admin")]].map(([key,title]) =>
                 `<option value="${key}" ${mode === key ? "selected" : ""}>${title}</option>`).join("")}
             </select>
           </label>
-          ${mode === "guest" ? `<div class="guest-note"><p><strong>Gäste einrichten</strong></p>
-            <ol><li>Erstelle für deinen Gast ein Konto ohne Administratorrechte. Aktiviere „Nur lokaler Zugriff“.</li>
-            <li>Wähle das Konto hier aus und speichere die App.</li>
-            <li>Der Gast meldet sich im Heim-WLAN in seiner Companion-App an und öffnet den Companion-Link aus dem Schritt „Teilen“.</li></ol>
-            <a href="/config/users" target="_blank" rel="noopener">Benutzerverwaltung öffnen ↗</a>
-            <button type="button" class="btn" id="reload-users">Konten neu laden</button>
-            <p>Das Konto behält seine übrigen Home-Assistant-Rechte.</p></div>` : ""}
-          ${mode === "selected" || mode === "guest" ? `<fieldset><legend>Konten auswählen</legend>
+          ${mode === "guest" ? `<div class="guest-note"><p><strong>${this._t("guest_setup")}</strong></p>
+            <ol><li>${this._t("guest_account")}</li>
+            <li>${this._t("guest_select")}</li>
+            <li>${this._t("guest_open")}</li></ol>
+            <a href="/config/users" target="_blank" rel="noopener">${this._t("manage_users")}</a>
+            <button type="button" class="btn" id="reload-users">${this._t("reload_users")}</button>
+            <p>${this._t("guest_permissions")}</p></div>` : ""}
+          ${mode === "selected" || mode === "guest" ? `<fieldset><legend>${this._t("choose_accounts")}</legend>
             ${selectable.map(u => `<label class="access-user"><input type="checkbox" class="a-user-cb" value="${this._esc(u.id)}"
-                ${d.access.allowed_user_ids.includes(u.id) ? "checked" : ""} />${this._esc(u.name)}</label>`).join("") || "<p>Kein passendes Konto vorhanden.</p>"}
+                ${d.access.allowed_user_ids.includes(u.id) ? "checked" : ""} />${this._esc(u.name)}</label>`).join("") || `<p>${this._t("no_accounts")}</p>`}
             </fieldset>` : ""}
-          <p>Administratoren können die App jederzeit öffnen.</p>
+          <p>${this._t("admin_access")}</p>
         </div>
       `;
     }
@@ -1368,55 +1381,55 @@ class PwaAppStudioPanel extends HTMLElement {
     const companionUrl = runnerPath ? `homeassistant://navigate${runnerPath}` : "";
     return `
       <div class="card-box companion-card">
-        <strong>In der Home Assistant Companion-App öffnen</strong>
+        <strong>${this._t("companion_heading")}</strong>
         ${companionUrl ? `
-          <p>Öffne die App auf deinem Handy mit der Anmeldung, die du dort in Home Assistant schon verwendest.</p>
+          <p>${this._t("companion_intro")}</p>
           <div class="share-actions">
-            <a class="btn primary companion-link" href="${this._esc(companionUrl)}">In Home Assistant öffnen ↗</a>
-            <button type="button" class="btn" id="copy-companion-link">Companion-Link kopieren</button>
+            <a class="btn primary companion-link" href="${this._esc(companionUrl)}">${this._t("companion_open")}</a>
+            <button type="button" class="btn" id="copy-companion-link">${this._t("companion_copy")}</button>
           </div>
           <p id="companion-copy-status" role="status" hidden></p>
           <details id="companion-link-details">
-            <summary>Link und Dashboard-Pfad anzeigen</summary>
-            <label>Companion-Link zum Weitergeben
+            <summary>${this._t("companion_details")}</summary>
+            <label>${this._t("companion_url")}
               <input id="companion-url" type="text" readonly value="${this._esc(companionUrl)}" />
             </label>
-            <label>Pfad für eine Schaltfläche im Home-Assistant-Dashboard
+            <label>${this._t("companion_path")}
               <input type="text" readonly value="${this._esc(runnerPath)}" />
             </label>
-          </details>` : "<p>Speichere deine App, um den Companion-Link zu erhalten.</p>"}
+          </details>` : `<p>${this._t("companion_save_first")}</p>`}
       </div>
       <div class="card-box">
-        <strong>Als Web-App auf dem Startbildschirm installieren</strong>
+        <strong>${this._t("install_heading")}</strong>
         <p style="font-size:13px;opacity:0.85;">
-          Dein Gerät: <b>${this._esc(detected.osLabel)}</b>
+          ${this._t("your_device")}: <b>${this._esc(detected.osLabel)}</b>
         </p>
         <div style="display:flex;flex-wrap:wrap;gap:10px;">
-          <button class="btn primary" id="install-current-btn" ${this._qrInfo ? "" : "disabled"}>Auf diesem Gerät installieren</button>
+          <button class="btn primary" id="install-current-btn" ${this._qrInfo ? "" : "disabled"}>${this._t("install_here")}</button>
           ${
             this._selectedAppId
-              ? `<button class="btn" id="refresh-qr-btn">QR-Code aktualisieren</button>`
+              ? `<button class="btn" id="refresh-qr-btn">${this._t("qr_refresh")}</button>`
               : ""
           }
         </div>
       </div>
 
       <div class="card-box">
-        <strong>QR-Code für die Browser-Web-App</strong>
+        <strong>${this._t("qr_heading")}</strong>
         ${
           !this._selectedAppId
-            ? `<p style="font-size:13px;opacity:0.75;">Bitte speichere die App zunächst über "Speichern", um einen QR-Code zu erzeugen.</p>`
+            ? `<p style="font-size:13px;opacity:0.75;">${this._t("qr_save_first")}</p>`
             : !this._qrInfo
-            ? `<p style="font-size:13px;opacity:0.75;">${this._errorMsg ? "QR-Code aktuell nicht verfügbar." : "QR-Code wird geladen …"}</p>`
+            ? `<p style="font-size:13px;opacity:0.75;">${this._errorMsg ? this._t("qr_unavailable") : this._t("qr_loading")}</p>`
             : `
           <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;margin-top:12px;">
             <div style="background:#ffffff;padding:12px;border-radius:12px;width:210px;height:210px;display:flex;align-items:center;justify-content:center;">
               ${this._qrInfo.qr_svg}
             </div>
             <div style="flex:1;min-width:220px;">
-              <div style="font-size:12px;opacity:0.75;">Ziel-URL zum Scannen:</div>
+              <div style="font-size:12px;opacity:0.75;">${this._t("qr_url")}:</div>
               <input readonly value="${this._esc(this._qrInfo.launch_url)}" style="margin:6px 0 12px;" onclick="this.select()" />
-              <div style="font-size:12px;opacity:0.75;margin-bottom:6px;">Berechtigte Benutzer nach Scan:</div>
+              <div style="font-size:12px;opacity:0.75;margin-bottom:6px;">${this._t("qr_permitted")}:</div>
               <div style="display:flex;flex-wrap:wrap;gap:6px;">
                 ${(this._qrInfo.permitted_users || [])
                   .map(
@@ -1440,7 +1453,7 @@ class PwaAppStudioPanel extends HTMLElement {
       shadow.innerHTML = `<link rel="stylesheet" href="/pwa_app_studio_static/pwa-shell.css">
         <div class="launch" aria-hidden="true" style="color:white">
           <div class="welcome"><div class="mark"><span style="font-size:48px">⌂</span></div>
-          <h1></h1><p>Deine App wird geöffnet …</p></div></div>`;
+          <h1></h1><p>${this._t("launch_loading")}</p></div></div>`;
       const updateSample = () => {
         const manifest = this._draft.manifest;
         sample.style.setProperty("--app-accent", manifest.theme_color);
@@ -1627,7 +1640,7 @@ class PwaAppStudioPanel extends HTMLElement {
           this._errorMsg = "";
           this._renderDevicePreviewCards();
         } catch (err) {
-          this._errorMsg = `Ungültiges JSON in Karte #${i + 1}: ${err.message}`;
+          this._errorMsg = this._t("invalid_json", { index: i + 1, message: err.message });
         }
       });
     });
@@ -1706,7 +1719,7 @@ class PwaAppStudioPanel extends HTMLElement {
         const result = await this._hass.callWS({ type: "pwa_app_studio/users/list" });
         this._users = result.users || [];
       } catch (err) {
-        this._errorMsg = err?.message || "Konten konnten nicht geladen werden.";
+        this._errorMsg = err?.message || this._t("users_failed");
       }
       this._render();
       this._renderDevicePreviewCards();
@@ -1726,12 +1739,12 @@ class PwaAppStudioPanel extends HTMLElement {
       status.hidden = false;
       try {
         await navigator.clipboard.writeText(url.value);
-        status.textContent = "Companion-Link kopiert.";
+        status.textContent = this._t("link_copied");
       } catch {
         sr.getElementById("companion-link-details").open = true;
         url.focus();
         url.select();
-        status.textContent = "Der Link ist markiert. Kopiere ihn über das Auswahlmenü.";
+        status.textContent = this._t("link_selected");
       }
     });
 

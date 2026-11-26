@@ -26,7 +26,7 @@ Lass die Seitenleistenoption eingeschaltet, wenn du den Designer schnell erreich
 
 ## Deine erste App erstellen
 
-Öffne **PWA Web-App Studio** und klicke auf **+ Neue PWA**.
+Öffne **PWA Web-App Studio** und klicke auf **+ Neue PWA**. Stellst du unter **Einstellungen → System → Allgemein** Deutsch als Systemsprache ein, erscheint der Designer automatisch auf Deutsch. Sonst verwendet er Englisch. Bei älteren Servern ohne eigene Systemsprache zählt die Sprache der Home-Assistant-Oberfläche.
 
 1. **App**. Gib der App einen Namen und einen Kurznamen für den Startbildschirm. Wähle Akzent- und Hintergrundfarbe. Neue Apps starten mit Blau (`#2563EB`). Unter **Animation beim Öffnen** wählst du sanfte Wellen, einen Leuchtschein oder ein Standbild. Mit **Startanimation ansehen** siehst du das Ergebnis mit deinem Symbol und deinen Farben.
 2. **Inhalt**. Wähle ein Dashboard und bei Bedarf eine bestimmte Ansicht. Für eine kleinere App stellst du einzelne Karten zusammen und legst ihr Layout fest.

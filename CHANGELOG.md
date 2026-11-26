@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.11.26.5
+
+- Show the designer in English by default and automatically switch to German for German Home Assistant servers.
+
 ## 2026.11.26.4
 
 - Give the designer and new web apps a blue accent, with each app's selected color applied to its view navigation.

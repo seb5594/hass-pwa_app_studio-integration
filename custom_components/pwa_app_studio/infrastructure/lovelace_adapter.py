@@ -10,6 +10,11 @@ from homeassistant.core import HomeAssistant
 _LOGGER = logging.getLogger(__name__)
 
 
+def _is_german(hass: HomeAssistant) -> bool:
+    language = getattr(hass.config, "language", None) or ""
+    return language.lower().replace("_", "-").split("-", 1)[0] == "de"
+
+
 class HaLovelaceAdapter:
     '''Reads LovelaceData dashboards, views, sections, and cards safely.'''
 
@@ -19,6 +24,9 @@ class HaLovelaceAdapter:
     async def async_list_dashboards(self) -> list[dict[str, Any]]:
         lovelace_data = self._hass.data.get("lovelace")
         dashboards_map = self._dashboards()
+        german = _is_german(self._hass)
+        overview = "Übersicht" if german else "Overview"
+        view_label = "Ansicht" if german else "View"
         if isinstance(lovelace_data, dict):
             resource_mode = lovelace_data.get("mode", "storage")
         else:
@@ -30,7 +38,7 @@ class HaLovelaceAdapter:
             cfg_meta = getattr(dashboard, "config", None) or {}
             title = str(
                 cfg_meta.get("title")
-                or ("Übersicht" if normalized_path == "lovelace" else normalized_path)
+                or (overview if normalized_path == "lovelace" else normalized_path)
             )
             icon = str(cfg_meta.get("icon") or "mdi:view-dashboard")
             mode = str(cfg_meta.get("mode") or resource_mode)
@@ -43,7 +51,7 @@ class HaLovelaceAdapter:
                         if not isinstance(view, dict):
                             continue
                         v_path = str(view.get("path") or idx)
-                        v_title = str(view.get("title") or f"Ansicht {idx + 1}")
+                        v_title = str(view.get("title") or f"{view_label} {idx + 1}")
                         v_icon = str(view.get("icon") or "")
                         cards = self._extract_cards_from_view(view)
                         views_info.append(
@@ -111,6 +119,7 @@ class HaUserDirectoryAdapter:
 
     async def async_list_registered_users(self) -> list[dict[str, Any]]:
         users = await self._hass.auth.async_get_users()
+        unnamed = "Unbenannter Benutzer" if _is_german(self._hass) else "Unnamed user"
         result: list[dict[str, Any]] = []
         for user in users:
             if user.system_generated or not user.is_active:
@@ -118,7 +127,7 @@ class HaUserDirectoryAdapter:
             result.append(
                 {
                     "id": user.id,
-                    "name": user.name or "Unbenannter Benutzer",
+                    "name": user.name or unnamed,
                     "is_admin": bool(user.is_admin),
                     "local_only": user.local_only,
                     "is_owner": bool(user.is_owner),

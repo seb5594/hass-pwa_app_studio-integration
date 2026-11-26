@@ -41,25 +41,25 @@ Keep the administrator sidebar option enabled for quick access. You can also rea
 
 ## Build your first app
 
-Open **PWA Web-App Studio** and select **+ Neue PWA** (new web app). The designer currently uses German labels. Here is what each step does.
+Open **PWA Web-App Studio** and select **+ New web app**. The designer uses English by default and switches to German when the Home Assistant system language under **Settings → System → General** is German. Older servers that only expose the frontend language use that setting instead.
 
-1. **App**. Enter a name and a short name for the home screen. Pick an accent and background color. New apps start with blue (`#2563EB`). Under **Animation beim Öffnen**, choose soft ripples, a glow or a still image. Use **Startanimation ansehen** to see it with your colors and icon.
-2. **Inhalt** (content). Choose a dashboard and, if you like, a specific view. For a smaller app, assemble individual cards and choose their layout.
-3. **Symbol** (icon). Use a Home Assistant or dashboard icon, choose an MDI icon, or upload an image. The preview can show a phone, tablet or desktop layout.
-4. **Zugriff** (access). Pick who can open the app. Choose all signed-in users, selected accounts, local guests or administrators. Save with **Speichern**.
-5. **Teilen** (share). Open the app in the Companion App, copy its link or use the QR code for the browser version.
+1. **App**. Enter a name and a short name for the home screen. Pick an accent and background color. New apps start with blue (`#2563EB`). Under **Launch animation**, choose soft ripples, a glow or a still image. Use **Preview the launch animation** to see it with your colors and icon.
+2. **Content**. Choose a dashboard and, if you like, a specific view. For a smaller app, assemble individual cards and choose their layout.
+3. **Icon**. Use a Home Assistant or dashboard icon, choose an MDI icon, or upload an image. The preview can show a phone, tablet or desktop layout.
+4. **Access**. Pick who can open the app. Choose all signed-in users, selected accounts, local guests or administrators. Save with **Save**.
+5. **Share**. Open the app in the Companion App, copy its link or use the QR code for the browser version.
 
 Each app uses the permissions of the signed-in Home Assistant account. Keep that in mind when choosing a dashboard for someone else.
 
 ## Open it in the Home Assistant Companion App
 
 1. Open the official **Home Assistant** app on your phone. If your server is already signed in, check that you can see its dashboard. Otherwise select **Connect to my Home Assistant server**, or **Settings → Companion App → Add Server** on an existing setup. Pick or enter your server address and sign in inside the app. [Companion App setup](https://companion.home-assistant.io/docs/getting_started/#step-by-step-setup)
-2. In the designer, open the saved app and go to **Teilen → In Home Assistant öffnen** (open in Home Assistant). If you are at your computer, select **Companion-Link kopieren** and send the link to your phone.
+2. In the designer, open the saved app and go to **Share → Open in Home Assistant**. If you are at your computer, select **Copy Companion link** and send the link to your phone.
 3. Tap the link and choose the correct server if prompted. The app view opens with the active Companion session. [Android and iOS navigation links](https://companion.home-assistant.io/docs/integrations/url-handler/#navigate)
 
 ### Add a dashboard button
 
-Want a fixed place to open the app? Under **Teilen → Link und Dashboard-Pfad anzeigen**, copy the dashboard path. Add a button card to a dashboard the account can open, select **Navigate** as its tap action and paste the path. For an app with the slug `my-garden`, the YAML looks like this. [Home Assistant dashboard actions](https://www.home-assistant.io/dashboards/actions/)
+Want a fixed place to open the app? Under **Share → Show the link and dashboard path**, copy the dashboard path. Add a button card to a dashboard the account can open, select **Navigate** as its tap action and paste the path. For an app with the slug `my-garden`, the YAML looks like this. [Home Assistant dashboard actions](https://www.home-assistant.io/dashboards/actions/)
 
 ```yaml
 type: button
@@ -73,14 +73,14 @@ tap_action:
 ## Share with guests on your home network
 
 1. In Home Assistant, go to **Settings → People → Users**. Create an account, turn on **Local access only** and leave **Administrator** off. [Home Assistant user accounts](https://www.home-assistant.io/docs/configuration/user-configuration/#about-persons-and-users)
-2. In the studio, choose **Zugriff → Gäste im Heimnetz** (guests on the home network). Select the guest account and save. If you created it while the designer was open, select **Konten neu laden** to refresh the list.
+2. In the studio, choose **Access → Guests on the home network**. Select the guest account and save. If you created it while the designer was open, select **Reload accounts** to refresh the list.
 3. The guest joins your home Wi-Fi, adds your internal Home Assistant address in the Companion App and signs in with the guest account. Share the Companion link or give them the dashboard button.
 
 For browser sharing, the guest-mode QR code uses the internal Home Assistant address. If the QR code is unavailable, check the internal URL under **Settings → System → Network** and make sure the guest device can reach that address.
 
 ## Install the browser web app
 
-1. Open the saved app on the target device with the QR code, the browser link or **Auf diesem Gerät installieren** (install on this device). Use a Home Assistant address reachable over HTTPS.
+1. Open the saved app on the target device with the QR code, the browser link or **Install on this device**. Use a Home Assistant address reachable over HTTPS.
 2. Sign in to Home Assistant if the browser asks. On iPhone or iPad, open the link in Safari and use **Share → Add to Home Screen**. Turn on **Open as Web App** if it is shown. On Android, use Chrome’s **Install** or **Add to Home screen** action. On desktop, use the install option in a browser that offers it. [Apple instructions](https://support.apple.com/guide/iphone/iphea86e5236/ios) · [Chrome instructions](https://support.google.com/chrome/answer/9658361)
 3. Tap the icon on your home screen to open the app. A standalone web app uses its browser session. If that session is missing, Home Assistant prompts you to sign in.
 
@@ -88,7 +88,7 @@ Offline caching covers the app shell, icon and other public files. Cards, curren
 
 ## Questions or something not working?
 
-- **Access denied.** Check which Home Assistant account is signed in and whether it is selected under **Zugriff**. For guests, also check that the phone is using your internal server address from your home network.
+- **Access denied.** Check which Home Assistant account is signed in and whether it is selected under **Access**. For guests, also check that the phone is using your internal server address from your home network.
 - **The Companion link stays as text.** Use a dashboard button with the relative path from the designer.
 - **The install option is missing.** Open the browser link in Safari on Apple mobile devices or an install-capable Chromium browser. Check that the HTTPS URL opens without a certificate error.
 - **A card is missing.** Check it first in Home Assistant with the same account. If it is a custom card, check that its resource is available to that frontend.
