@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026.11.26.90
+
+- Recover HACS update discovery where the GitHub release list sorts single-digit builds before builds 10–12.
+- Keep the web app on the sign-in chooser until the user selects a sign-in method.
+- Navigate directly inside the Companion App and show clickable browser choices when system sharing is unavailable.
+
 ## 2026.11.26.12
 
 - Open the matching device request in the Companion App and complete sign-in in the browser tab that started the request.

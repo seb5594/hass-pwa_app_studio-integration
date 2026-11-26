@@ -1,0 +1,40 @@
+name: Check release discovery
+
+on:
+  workflow_run:
+    workflows: [Home Assistant CI]
+    branches: [main]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify GitHub and HACS surface the same release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          repo="repos/$GITHUB_REPOSITORY"
+          version=$(gh api "$repo/contents/custom_components/pwa_app_studio/manifest.json?ref=$RUN_SHA" --jq .content | base64 -d | jq -r .version)
+          current=$(gh api "$repo/contents/custom_components/pwa_app_studio/manifest.json" --jq .content | base64 -d | jq -r .version)
+          if [[ "$version" != "$current" ]]; then
+            echo "A newer build is on the default branch."
+            exit 0
+          fi
+          for attempt in 1 2 3 4 5; do
+            pinned=$(gh api "$repo/releases/latest" --jq .tag_name)
+            hacs=$(gh api "$repo/releases?per_page=30" --jq '[.[] | select((.draft or .prerelease) | not)][0].tag_name')
+            if [[ "$pinned" == "$version" && "$hacs" == "$version" ]]; then
+              echo "GitHub Latest and the first stable HACS release both resolve to $version."
+              exit 0
+            fi
+            sleep 8
+          done
+          echo "::error::Expected $version, but GitHub Latest is $pinned and the first stable release listed for HACS is $hacs."
+          exit 1

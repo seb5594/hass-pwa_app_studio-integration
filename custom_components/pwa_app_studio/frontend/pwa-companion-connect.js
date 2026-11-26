@@ -1,6 +1,8 @@
-const COMPANION_URL = "homeassistant://navigate/pwa-app-studio-connect";
+import { companionAppLink } from "./pwa-install.js";
 
-export function waitForDeviceApproval({ launch, slug, t, passwordLogin, iosBrowser }) {
+const COMPANION_PATH = "/pwa-app-studio-connect";
+
+export function waitForDeviceApproval({ launch, slug, t, passwordLogin, iosBrowser, allowPairing, secure }) {
   const endpoint = `/api/pwa_app_studio/companion/device/${encodeURIComponent(slug)}`;
   const storageKey = `pwa-app-studio-device:${slug}`;
   const status = launch.querySelector("#launch-status");
@@ -8,11 +10,14 @@ export function waitForDeviceApproval({ launch, slug, t, passwordLogin, iosBrows
   controls.className = "companion-connect";
   controls.innerHTML = `
     <p data-ios hidden>${t("pairing_ios_install")}</p>
-    <button type="button" data-start>${t("pairing_begin")}</button>
+    <button type="button" data-start hidden>${t("pairing_begin")}</button>
+    <p data-disabled hidden>${t(secure ? "pairing_disabled" : "pairing_secure_browser")}</p>
+    <a data-direct hidden class="companion-open" href="${companionAppLink(`/pwa-app-studio-runner/${slug}`)}">${t("companion_open")}</a>
     <div data-request hidden>
       <p>${t("pairing_switch")}</p>
       <p><code></code></p>
-      <a class="companion-open" href="${COMPANION_URL}">${t("pairing_open")}</a>
+      <a class="companion-open" href="${companionAppLink(COMPANION_PATH)}">${t("pairing_open")}</a>
+      <a data-alternate hidden class="companion-open" href="homeassistant://navigate${COMPANION_PATH}">${t("pairing_open_alternate")}</a>
       <button type="button" data-copy>${t("pairing_copy_code")}</button>
       <button type="button" data-check>${t("pairing_check")}</button>
     </div>
@@ -25,6 +30,19 @@ export function waitForDeviceApproval({ launch, slug, t, passwordLogin, iosBrows
   const copy = controls.querySelector("[data-copy]");
   const password = controls.querySelector("[data-password]");
   const request = controls.querySelector("[data-request]");
+  if (!allowPairing) {
+    controls.querySelector("[data-disabled]").hidden = false;
+    controls.querySelector("[data-direct]").hidden = false;
+    return new Promise(() => {
+      password.onclick = async () => {
+        try {
+          await passwordLogin();
+        } catch {
+          status.textContent = t("pairing_failed");
+        }
+      };
+    });
+  }
   copy.hidden = !navigator.clipboard?.writeText;
   async function post(data) {
     const controller = new AbortController();
@@ -66,7 +84,12 @@ export function waitForDeviceApproval({ launch, slug, t, passwordLogin, iosBrows
       request.hidden = !pairing;
       if (pairing) {
         request.querySelector("code").textContent = pairing.code.match(/.{1,4}/g).join(" ");
-        request.querySelector("a").href = pairing.reference ? `${COMPANION_URL}/${pairing.reference}` : COMPANION_URL;
+        const path = pairing.reference ? `${COMPANION_PATH}/${pairing.reference}` : COMPANION_PATH;
+        const link = request.querySelector("a");
+        const alternate = request.querySelector("[data-alternate]");
+        link.href = companionAppLink(path);
+        alternate.href = `homeassistant://navigate${path}`;
+        alternate.hidden = link.href === alternate.href;
         status.textContent = t("pairing_pending");
       }
     };

@@ -91,6 +91,7 @@ button { min-height: 44px; cursor: pointer; font: inherit; }
 .launch button { padding: .5rem 1rem; border: 0; border-radius: 2rem; background: #edf2ff; color: #182133; font-weight: 600; }
 .launch input[type="url"] { width:100%; margin-top:12px; padding:8px; font:inherit; }
 .companion-connect button, .companion-connect a { margin:4px; }
+.companion-connect [hidden] { display:none; }
 .companion-connect button:not([data-start]) {
   color:#edf2ff; background:#ffffff12; border:1px solid #ffffff50;
 }

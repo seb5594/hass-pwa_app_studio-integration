@@ -1,6 +1,6 @@
 /* Admin-only PWA Web-App Studio Designer custom panel with Live Device Preview, Multi-Card Composer, Icon Studio & QR Distribution. */
 
-import { androidBrowserLink, isAndroidWebView } from "./pwa-install.js";
+import { androidBrowserLink, companionAppLink, isAndroidWebView, isCompanionWebView } from "./pwa-install.js";
 import { loadPwaCardHelpers } from "./pwa-card-helpers.js";
 import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
 
@@ -959,7 +959,7 @@ class PwaAppStudioPanel extends HTMLElement {
         .guest-note button { min-height:44px; margin:4px 0; }
         .guest-note a { color:inherit; text-underline-offset:3px; }
         .companion-link { display:inline-flex; align-items:center; min-height:44px; text-decoration:none; }
-        #share-in-browser[hidden] { display:none; }
+        #share-browser-options[hidden] { display:none; }
         .companion-card p { margin:8px 0 14px; line-height:1.5; }
         .share-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
         .share-actions .btn { min-height:44px; }
@@ -1386,6 +1386,7 @@ class PwaAppStudioPanel extends HTMLElement {
     const saved = this._apps.find(app => app.app_id === this._selectedAppId);
     const runnerPath = saved ? `/pwa-app-studio-runner/${saved.slug}` : "";
     const companionUrl = runnerPath ? `homeassistant://navigate${runnerPath}` : "";
+    const inCompanion = isCompanionWebView();
     const regularUrl = saved && !saved.access.local_guests
       ? new URL(`/pwa_app_studio/app/${saved.slug}/`, location.origin).href
       : "";
@@ -1396,16 +1397,24 @@ class PwaAppStudioPanel extends HTMLElement {
     const externalInstallUrl = androidWebView && installUrl ? androidBrowserLink(installUrl) : "";
     const shareUrl = saved && installUrl ? new URL(`/pwa_app_studio/share/${saved.slug}`, installUrl) : null;
     const shareHref = shareUrl && (androidWebView ? androidBrowserLink(shareUrl) : shareUrl.href);
+    const chromeShareHref = shareUrl && androidWebView ? androidBrowserLink(shareUrl, true) : "";
     const browserTarget = androidWebView ? "" : 'target="_blank" rel="noopener"';
+    const showShareOptions = this.shadowRoot.getElementById("browser-url")?.value === browserUrl &&
+      this.shadowRoot.getElementById("share-browser-options")?.hidden === false;
     return `
       <div class="card-box companion-card">
         <strong>${this._t("companion_heading")}</strong>
         ${companionUrl ? `
           <p>${this._t("companion_intro")}</p>
           <div class="share-actions">
-            <a class="btn primary companion-link" href="${this._esc(companionUrl)}">${this._t("companion_open")}</a>
+            <a class="btn primary companion-link" id="open-companion-app"
+              href="${this._esc(inCompanion ? runnerPath : companionAppLink(runnerPath))}"
+              ${inCompanion ? 'data-in-companion' : ''}>${this._t("companion_open")}</a>
             <button type="button" class="btn" id="copy-companion-link">${this._t("companion_copy")}</button>
           </div>
+          ${saved.access.allow_companion_pairing ? "" : `
+            <p>${this._t("pairing_disabled")}</p>
+            <button type="button" class="btn" data-tab="access">${this._t("pairing_access_settings")}</button>`}
           <p id="companion-copy-status" role="status" hidden></p>
           <details id="companion-link-details">
             <summary>${this._t("companion_details")}</summary>
@@ -1445,12 +1454,14 @@ class PwaAppStudioPanel extends HTMLElement {
           <div class="browser-share">
             <div class="browser-share-controls">
               <div class="share-actions">
-                <a class="btn primary companion-link" id="share-browser-link" href="${this._esc(shareHref)}" ${browserTarget}>${this._t("browser_share")}</a>
+                <button type="button" class="btn primary" id="share-browser-link">${this._t("browser_share")}</button>
                 <button type="button" class="btn" id="copy-browser-link">${this._t("browser_copy")}</button>
               </div>
-              <p id="browser-share-status" class="install-hint" role="status" hidden></p>
-              <a class="btn companion-link" id="share-in-browser"
-                href="${this._esc(shareHref)}" ${browserTarget} hidden>${this._t("share_open_browser")}</a>
+              <p id="browser-share-status" class="install-hint" role="status" ${showShareOptions ? "" : "hidden"}>${showShareOptions ? this._t("share_browser_hint") : ""}</p>
+              <div class="share-actions" id="share-browser-options" ${showShareOptions ? "" : "hidden"}>
+                <a class="btn companion-link" href="${this._esc(shareHref)}" ${browserTarget}>${this._t("share_open_browser")}</a>
+                ${chromeShareHref ? `<a class="btn companion-link" href="${this._esc(chromeShareHref)}">${this._t("share_open_chrome")}</a>` : ""}
+              </div>
               <label style="margin:10px 0 12px;">${this._t("qr_url")}
                 <input id="browser-url" readonly value="${this._esc(browserUrl)}" onclick="this.select()" />
               </label>
@@ -1793,10 +1804,17 @@ class PwaAppStudioPanel extends HTMLElement {
       }
     });
 
+    sr.querySelector("#open-companion-app[data-in-companion]")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      const path = event.currentTarget.getAttribute("href");
+      history.pushState({ from: location.pathname + location.search }, "", path);
+      window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
+    });
+
     const copyBrowserLink = async () => {
       const input = sr.getElementById("browser-url");
       const status = sr.getElementById("browser-share-status");
-      sr.getElementById("share-in-browser").hidden = true;
+      sr.getElementById("share-browser-options").hidden = true;
       status.hidden = false;
       try {
         await navigator.clipboard.writeText(input.value);
@@ -1808,30 +1826,26 @@ class PwaAppStudioPanel extends HTMLElement {
       }
     };
     sr.getElementById("copy-browser-link")?.addEventListener("click", copyBrowserLink);
-    sr.getElementById("share-browser-link")?.addEventListener("click", async (event) => {
-      const browserLink = sr.getElementById("share-in-browser");
+    sr.getElementById("share-browser-link")?.addEventListener("click", async () => {
+      const browserOptions = sr.getElementById("share-browser-options");
       const status = sr.getElementById("browser-share-status");
       status.hidden = true;
-      browserLink.hidden = true;
+      browserOptions.hidden = true;
       const data = {
         title: this._apps.find(app => app.app_id === this._selectedAppId)?.manifest.name,
         url: sr.getElementById("browser-url").value,
       };
       if (navigator.share && (!navigator.canShare || navigator.canShare(data))) {
-        event.preventDefault();
         try {
           await navigator.share(data);
           return;
         } catch (error) {
           if (error?.name === "AbortError") return;
         }
-      } else {
-        // The anchor opens the browser with the original tap's user activation.
-        return;
       }
       status.textContent = this._t("share_browser_hint");
       status.hidden = false;
-      browserLink.hidden = false;
+      browserOptions.hidden = false;
     });
     sr.getElementById("refresh-qr-btn")?.addEventListener("click", () =>
       this._loadQrCode()

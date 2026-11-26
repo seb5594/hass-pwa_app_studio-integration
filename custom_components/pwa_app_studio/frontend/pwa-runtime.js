@@ -219,14 +219,12 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
   }
 
   async function signIn() {
-    if (root.dataset.companionPairing !== "true" || !window.isSecureContext) {
-      await startOAuthFlow();
-      return null;
-    }
     return saveNewSession(await waitForDeviceApproval({
       launch, slug, t,
       passwordLogin: startOAuthFlow,
       iosBrowser: isIos && !isStandalone(),
+      allowPairing: root.dataset.companionPairing === "true" && window.isSecureContext,
+      secure: window.isSecureContext,
     }));
   }
 
