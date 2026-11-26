@@ -1,5 +1,8 @@
 /* Standalone PWA runtime hosted at /pwa_app_studio/app/<slug>/ handling SW, IndieAuth PKCE, ACL check, and device install. */
 
+import { chromeInstallLink } from "./pwa-install.js";
+import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
+
 (async () => {
   const root = document.getElementById("pwa-root");
   if (!root) return;
@@ -9,7 +12,8 @@
   const basePath = root.dataset.base;
   const swUrl = root.dataset.swUrl;
   const clientUrl = root.dataset.clientUrl;
-  const themeColor = root.dataset.theme || "#03a9f4";
+  const language = studioLanguage({ config: { language: document.documentElement.lang } });
+  const t = (key) => studioMessage(language, key);
   const launch = root.querySelector(".launch");
 
   const origin = window.location.origin;
@@ -17,76 +21,39 @@
   const redirectUri = `${origin}${basePath}`;
   const pkceVerifierKey = `pwa_app_studio_pkce_${slug}`;
   const pkceStateKey = `pwa_app_studio_state_${slug}`;
+  const pkceInstallKey = `pwa_app_studio_install_${slug}`;
+  const wantsInstall = () => new URLSearchParams(location.search).get("auto_install") === "1";
 
   let deferredInstallPrompt = null;
+  let installBannerDismissed = false;
 
-  function detectPlatform() {
-    const uaData = navigator.userAgentData;
+  function installInstructions() {
     const ua = navigator.userAgent || "";
-    const platform = uaData?.platform || navigator.platform || "";
-    const isTouchMac = /Mac/i.test(platform) && navigator.maxTouchPoints > 1;
-    const isIos = /iPhone|iPad|iPod/i.test(ua) || isTouchMac;
-    const isAndroid = /Android/i.test(ua) || /Android/i.test(platform);
-    const isStandalone =
-      window.matchMedia?.("(display-mode: standalone)").matches ||
-      window.navigator.standalone === true;
-    const isEdge =
-      Boolean(uaData?.brands?.some((b) => /Edge/i.test(b.brand))) || /Edg/i.test(ua);
-    const isSafari = /Safari/i.test(ua) && !/Chrome|CriOS|FxiOS|Edg/i.test(ua);
-
-    if (isIos) {
-      return {
-        key: isTouchMac || /iPad/i.test(ua) ? "ipados" : "ios",
-        label: isTouchMac || /iPad/i.test(ua) ? "iPadOS (Safari)" : "iOS (Safari)",
-        isStandalone,
-        supportsNativePrompt: false,
-        instructions:
-          "Tippe unten/oben auf das Teilen-Symbol (Quadrat mit Pfeil) und wähle 'Zum Home-Bildschirm'.",
-      };
+    const platform = navigator.userAgentData?.platform || navigator.platform || "";
+    const android = /Android/i.test(platform) || /Android/i.test(ua);
+    const embedded = android && (/\bwv\b|Home\s?Assistant/i.test(ua) || Boolean(window.externalApp));
+    if (!window.isSecureContext) return { hint: t("install_https"), android, embedded };
+    if (embedded) return { hint: t("install_webview"), android, embedded };
+    if (android) return { hint: t("install_android"), android, embedded };
+    if (/iPhone|iPad|iPod/i.test(ua) || (/Mac/i.test(platform) && navigator.maxTouchPoints > 1)) {
+      return { hint: t("install_ios"), android, embedded };
     }
-    if (isAndroid) {
-      return {
-        key: "android",
-        label: isEdge ? "Android (Edge)" : "Android (Chrome / Chromium)",
-        isStandalone,
-        supportsNativePrompt: true,
-        instructions:
-          "Tippe auf 'Jetzt installieren' oder im Browser-Menü auf 'App installieren'.",
-      };
-    }
-    if (/Mac/i.test(platform) && isSafari) {
-      return {
-        key: "macos_safari",
-        label: "macOS (Safari)",
-        isStandalone,
-        supportsNativePrompt: false,
-        instructions: "Wähle im Safari-Menü 'Ablage → Zum Dock hinzufügen'.",
-      };
-    }
-    return {
-      key: "desktop_chromium",
-      label: isEdge ? `Desktop (${platform || "Edge"})` : `Desktop (${platform || "Chrome"})`,
-      isStandalone,
-      supportsNativePrompt: true,
-      instructions:
-        "Klicke auf 'Jetzt installieren' oder auf das Install-Symbol in der Adressleiste.",
-    };
+    const safari = /Mac/i.test(platform) && /Safari/i.test(ua) && !/Chrome|Edg/i.test(ua);
+    return { hint: t(safari ? "install_mac" : "install_desktop"), android, embedded };
   }
 
-  window.addEventListener("beforeinstallprompt", (ev) => {
-    ev.preventDefault();
-    deferredInstallPrompt = ev;
-    const btn = document.getElementById("pwa-install-btn");
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = `Auf ${detectPlatform().label} installieren`;
-    }
+  window.addEventListener("beforeinstallprompt", (event) => {
+    if (!wantsInstall() || installBannerDismissed) return;
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    const button = document.getElementById("pwa-install-btn");
+    if (button) button.hidden = false;
   });
 
   window.addEventListener("appinstalled", () => {
     deferredInstallPrompt = null;
-    const banner = document.getElementById("pwa-install-banner");
-    if (banner) banner.remove();
+    installBannerDismissed = true;
+    document.getElementById("pwa-install-banner")?.remove();
   });
 
   async function registerServiceWorker() {
@@ -132,6 +99,8 @@
   async function startOAuthFlow() {
     const state = randomString(24);
     sessionStorage.setItem(pkceStateKey, state);
+    if (wantsInstall()) sessionStorage.setItem(pkceInstallKey, "1");
+    else sessionStorage.removeItem(pkceInstallKey);
 
     const authUrl = new URL("/auth/authorize", origin);
     authUrl.searchParams.set("client_id", clientId);
@@ -192,6 +161,10 @@
     saveStoredTokens(stored);
     sessionStorage.removeItem(pkceVerifierKey);
     sessionStorage.removeItem(pkceStateKey);
+    if (sessionStorage.getItem(pkceInstallKey) === "1") {
+      url.searchParams.set("auto_install", "1");
+    }
+    sessionStorage.removeItem(pkceInstallKey);
 
     url.searchParams.delete("code");
     url.searchParams.delete("state");
@@ -258,47 +231,70 @@
   }
 
   function renderInstallBannerIfWanted() {
-    const plat = detectPlatform();
-    const params = new URLSearchParams(window.location.search);
-    const wantsInstall = params.get("auto_install") === "1";
-    if (plat.isStandalone || !wantsInstall) return;
+    if (!wantsInstall() || installBannerDismissed || document.getElementById("pwa-install-banner")) return;
+    if (navigator.standalone === true || ["standalone", "fullscreen", "minimal-ui", "window-controls-overlay"]
+      .some(mode => window.matchMedia(`(display-mode: ${mode})`).matches)) return;
 
-    const banner = document.createElement("div");
+    const { hint, android, embedded } = installInstructions();
+    const installUrl = new URL(basePath, origin);
+    installUrl.searchParams.set("auto_install", "1");
+    const chromeUrl = embedded ? chromeInstallLink(installUrl) : "";
+
+    const banner = document.createElement("section");
     banner.id = "pwa-install-banner";
-    banner.style.cssText = `
-      display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;
-      padding:10px 14px;background:${themeColor};color:#fff;font-size:13px;z-index:20;
-    `;
+    banner.className = "install-banner";
+    banner.setAttribute("aria-label", t("install_help"));
     banner.innerHTML = `
-      <div>
-        <strong>${esc(appName)}</strong> — Erkanntes Gerät: <b>${esc(plat.label)}</b><br/>
-        <span style="opacity:0.95">${esc(plat.instructions)}</span>
+      <div class="install-heading">
+        <strong>${esc(t("install_help"))}</strong>
+        <button id="pwa-close-banner" aria-label="${esc(t("install_close"))}">✕</button>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        ${
-          plat.supportsNativePrompt
-            ? `<button id="pwa-install-btn" style="background:#111827;color:#fff;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:600;">
-                 ${deferredInstallPrompt ? `Auf ${esc(plat.label)} installieren` : "Installationsdialog prüfen"}
-               </button>`
-            : ""
-        }
-        <button id="pwa-close-banner" style="background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:8px;padding:8px 10px;cursor:pointer;">✕</button>
+      <p>${esc(hint)}</p>
+      <div class="install-actions">
+        <button id="pwa-install-btn" ${deferredInstallPrompt ? "" : "hidden"}>${esc(t("install_native"))}</button>
+        ${chromeUrl ? `<a href="${esc(chromeUrl)}">${esc(t("install_open_chrome"))}</a>` : ""}
+        ${android ? `<button id="pwa-copy-install-link">${esc(t("browser_copy"))}</button>` : ""}
       </div>
+      <input id="pwa-install-url" type="text" aria-label="${esc(t("qr_url"))}" readonly hidden value="${esc(installUrl.href)}" />
+      <p id="pwa-install-status" role="status" hidden></p>
     `;
-    root.prepend(banner);
+    root.before(banner);
 
-    document.getElementById("pwa-close-banner")?.addEventListener("click", () => banner.remove());
-    document.getElementById("pwa-install-btn")?.addEventListener("click", async () => {
-      if (deferredInstallPrompt) {
-        deferredInstallPrompt.prompt();
-        await deferredInstallPrompt.userChoice;
-        deferredInstallPrompt = null;
-      } else {
-        alert(plat.instructions);
+    banner.querySelector("#pwa-close-banner").onclick = () => {
+      installBannerDismissed = true;
+      banner.remove();
+    };
+    const status = banner.querySelector("#pwa-install-status");
+    const button = banner.querySelector("#pwa-install-btn");
+    button.onclick = async () => {
+      const prompt = deferredInstallPrompt;
+      if (!prompt) return;
+      deferredInstallPrompt = null;
+      button.hidden = true;
+      try {
+        await prompt.prompt();
+      } catch {
+        status.hidden = false;
+        status.textContent = t("install_retry_menu");
       }
-    });
+    };
+    const copy = banner.querySelector("#pwa-copy-install-link");
+    if (copy) copy.onclick = async () => {
+      const input = banner.querySelector("#pwa-install-url");
+      status.hidden = false;
+      try {
+        await navigator.clipboard.writeText(input.value);
+        status.textContent = t("browser_copied");
+      } catch {
+        input.hidden = false;
+        input.focus();
+        input.select();
+        status.textContent = t("browser_selected");
+      }
+    };
   }
 
+  renderInstallBannerIfWanted();
   void registerServiceWorker();
 
   try {

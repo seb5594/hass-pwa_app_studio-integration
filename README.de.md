@@ -65,9 +65,11 @@ Beim Teilen über den Browser verwendet der Gast-QR-Code die interne Home-Assist
 
 ## Die Browser-Web-App installieren
 
-1. Öffne die gespeicherte App auf dem Zielgerät über den QR-Code, den Browser-Link oder **Auf diesem Gerät installieren**. Verwende eine Home-Assistant-Adresse, die das Gerät über HTTPS öffnen kann.
-2. Melde dich bei Home Assistant an, falls der Browser danach fragt. Auf iPhone und iPad öffnest du den Link in Safari und wählst **Teilen → Zum Home-Bildschirm**. Aktiviere **Als Web-App öffnen**, wenn Safari die Option zeigt. Auf Android findest du in Chrome **Installieren** oder **Zum Startbildschirm hinzufügen**. Am Computer verwendest du die Installationsoption deines Browsers, sofern er sie anbietet. [Anleitung von Apple](https://support.apple.com/de-de/guide/iphone/iphea86e5236/ios) · [Anleitung für Chrome](https://support.google.com/chrome/answer/9658361?hl=de)
+1. Öffne unter **Teilen** auf Android **Zum Installieren in Chrome öffnen**. Wenn dein Handy die Seite in Home Assistant lässt, tippe auf **Browser-Link kopieren**, öffne Chrome als eigene App und füge den Link in dessen Adressleiste ein. Auf anderen Geräten kannst du **Auf diesem Gerät installieren** verwenden. Für die Browser-Installation braucht das Zielgerät eine erreichbare HTTPS-Adresse mit gültigem Zertifikat.
+2. Melde dich bei Home Assistant an, falls der Browser danach fragt. Auf iPhone und iPad öffnest du den Link in Safari und wählst **Teilen → Zum Home-Bildschirm**. Aktiviere **Als Web-App öffnen**, wenn Safari die Option zeigt. Auf Android tippe auf **Jetzt installieren**, wenn Chrome den Dialog anbietet. Sonst öffne das Chrome-Menü **⋮ → Installieren und Verknüpfung erstellen → Installieren**. Die Bezeichnung kann je nach Chrome-Version abweichen. Am Computer verwendest du die Installationsoption deines Browsers, sofern er sie anbietet. [Anleitung von Apple](https://support.apple.com/de-de/guide/iphone/iphea86e5236/ios) · [Anleitung für Chrome](https://support.google.com/chrome/answer/9658361?hl=de)
 3. Öffne die App über das Symbol auf dem Startbildschirm. Die eigenständig installierte App verwendet ihre Browsersitzung. Wenn dort noch keine Sitzung vorhanden ist, zeigt Home Assistant die Anmeldung an.
+
+Mit **Link teilen** öffnest du das Teilen-Menü deines Geräts. **Browser-Link kopieren** gibt dir dieselbe URL wie der QR-Code zum Einfügen.
 
 Der Offline-Cache speichert die App-Hülle, das Symbol und weitere öffentliche Dateien. Karten, aktuelle Zustände und die Bedienung deiner Geräte brauchen eine Verbindung zu Home Assistant.
 

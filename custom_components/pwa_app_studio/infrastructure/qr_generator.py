@@ -19,5 +19,8 @@ class SegnoQrGenerator:
 
         qr = segno.make(url, error="m")
         buf = io.BytesIO()
-        qr.save(buf, kind="svg", scale=6, border=4, xmldecl=False, dark="#111827", light="#ffffff")
+        qr.save(
+            buf, kind="svg", border=4, omitsize=True, xmldecl=False,
+            dark="#000", light="#fff",
+        )
         return buf.getvalue().decode("utf-8")

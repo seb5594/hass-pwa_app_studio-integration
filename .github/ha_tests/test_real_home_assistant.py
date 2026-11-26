@@ -8,8 +8,10 @@ locally: python .engine/.scripts/ha_matrix.py run 2026.9.4
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
+from xml.etree import ElementTree
 
 import pytest
+from aiohttp.test_utils import make_mocked_request
 
 pytest.importorskip("pytest_homeassistant_custom_component")
 
@@ -140,3 +142,36 @@ async def test_shell_launch_settings_and_footer(studio):
     assert "Made with ❤️ in Germany 🇩🇪" in shell
     assert 'href="https://github.com/seb5594"' in shell
     assert "user-scalable=no" not in shell
+
+
+async def test_share_qr_is_scalable_and_high_contrast(hass):
+    from custom_components.pwa_app_studio.infrastructure.qr_generator import SegnoQrGenerator
+
+    image = await SegnoQrGenerator(hass).async_generate_svg(
+        "https://home.example/pwa_app_studio/app/my-garden/"
+    )
+    svg = ElementTree.fromstring(image)
+    x, y, width, height = svg.attrib["viewBox"].split()
+    assert (x, y) == ("0", "0")
+    assert width == height
+    assert "width" not in svg.attrib and "height" not in svg.attrib
+    assert svg[0].attrib["fill"] == "#fff"
+    assert svg[1].attrib["stroke"] == "#000"
+
+
+async def test_android_maskable_icon_has_its_own_route(hass, studio):
+    await studio.async_create_app({"slug": "icon-maskable-garden"})
+    path = "/pwa_app_studio/app/icon-maskable-garden/icon-maskable-512.png"
+    request = make_mocked_request("GET", path, app=hass.http.app)
+    match = await hass.http.app.router.resolve(request)
+    assert match["size"] == "512"
+    view = hass.data[DOMAIN]["runtime"]
+    from custom_components.pwa_app_studio.presentation.http_views import PwaIconView
+
+    icons = PwaIconView(studio, view.icon_composer)
+    response = await icons.get(request, **match)
+    standard_request = make_mocked_request("GET", path.replace("icon-maskable-512", "icon-512"))
+    standard = await icons.get(standard_request, **match)
+    assert response.content_type == "image/png"
+    assert response.body.startswith(b"\x89PNG\r\n\x1a\n")
+    assert response.body != standard.body

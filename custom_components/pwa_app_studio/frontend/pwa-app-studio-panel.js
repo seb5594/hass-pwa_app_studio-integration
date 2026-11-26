@@ -1,5 +1,6 @@
 /* Admin-only PWA Web-App Studio Designer custom panel with Live Device Preview, Multi-Card Composer, Icon Studio & QR Distribution. */
 
+import { chromeInstallLink } from "./pwa-install.js";
 import { loadPwaCardHelpers } from "./pwa-card-helpers.js";
 import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
 
@@ -165,6 +166,7 @@ class PwaAppStudioPanel extends HTMLElement {
       osLabel,
       hasNativePrompt,
       isIos,
+      isAndroid,
       isStandalone:
         window.matchMedia?.("(display-mode: standalone)").matches ||
         window.navigator.standalone === true,
@@ -615,18 +617,6 @@ class PwaAppStudioPanel extends HTMLElement {
     this._renderDevicePreviewCards();
   }
 
-  _handleInstallOnCurrentDevice() {
-    if (!this._selectedAppId || !this._draft?.slug) {
-      this._errorMsg = this._t("save_before_install");
-      this._render();
-      return;
-    }
-    if (!this._qrInfo?.launch_url) return;
-    const url = new URL(this._qrInfo.launch_url, location.origin);
-    url.searchParams.set("auto_install", "1");
-    window.open(url, "_blank", "noopener");
-  }
-
   _render() {
     this.lang = this._language;
     if (!this._draft) {
@@ -966,6 +956,11 @@ class PwaAppStudioPanel extends HTMLElement {
         .companion-card p { margin:8px 0 14px; line-height:1.5; }
         .share-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
         .share-actions .btn { min-height:44px; }
+        .browser-share { display:flex; flex-wrap:wrap; align-items:flex-start; gap:16px; margin-top:12px; }
+        .browser-share-controls { flex:1 1 230px; min-width:0; }
+        .browser-qr { width:min(100%,320px); background:white; border-radius:12px; overflow:hidden; }
+        .browser-qr svg { display:block; width:100%; height:auto; shape-rendering:crispEdges; }
+        .install-hint { font-size:.875rem; line-height:1.5; }
         .access-user { display:flex; align-items:center; gap:10px; }
         .editor-pane input,.editor-pane select { min-width:0; }
       </style>
@@ -1379,6 +1374,10 @@ class PwaAppStudioPanel extends HTMLElement {
     const saved = this._apps.find(app => app.app_id === this._selectedAppId);
     const runnerPath = saved ? `/pwa-app-studio-runner/${saved.slug}` : "";
     const companionUrl = runnerPath ? `homeassistant://navigate${runnerPath}` : "";
+    const browserUrl = this._qrInfo?.launch_url || "";
+    const installUrl = browserUrl ? new URL(browserUrl, location.origin) : null;
+    installUrl?.searchParams.set("auto_install", "1");
+    const chromeUrl = detected.isAndroid && installUrl ? chromeInstallLink(installUrl) : "";
     return `
       <div class="card-box companion-card">
         <strong>${this._t("companion_heading")}</strong>
@@ -1404,31 +1403,36 @@ class PwaAppStudioPanel extends HTMLElement {
         <p style="font-size:13px;opacity:0.85;">
           ${this._t("your_device")}: <b>${this._esc(detected.osLabel)}</b>
         </p>
-        <div style="display:flex;flex-wrap:wrap;gap:10px;">
-          <button class="btn primary" id="install-current-btn" ${this._qrInfo ? "" : "disabled"}>${this._t("install_here")}</button>
-          ${
-            this._selectedAppId
-              ? `<button class="btn" id="refresh-qr-btn">${this._t("qr_refresh")}</button>`
-              : ""
-          }
+        <div class="share-actions">
+          ${installUrl ? `<a class="btn primary companion-link" id="install-current-btn"
+            href="${this._esc(chromeUrl || installUrl.href)}" ${chromeUrl ? "" : 'target="_blank" rel="noopener"'}>
+            ${this._t(chromeUrl ? "install_chrome" : "install_here")}
+          </a>` : `<button class="btn" disabled>${this._t("install_here")}</button>`}
         </div>
+        ${chromeUrl ? `<p class="install-hint">${this._t("install_android_hint")}</p>` : ""}
       </div>
 
       <div class="card-box">
-        <strong>${this._t("qr_heading")}</strong>
+        <div class="share-actions">
+          <strong>${this._t("qr_heading")}</strong>
+          ${this._selectedAppId ? `<button class="btn" id="refresh-qr-btn">${this._t("qr_refresh")}</button>` : ""}
+        </div>
         ${
           !this._selectedAppId
             ? `<p style="font-size:13px;opacity:0.75;">${this._t("qr_save_first")}</p>`
             : !this._qrInfo
             ? `<p style="font-size:13px;opacity:0.75;">${this._errorMsg ? this._t("qr_unavailable") : this._t("qr_loading")}</p>`
             : `
-          <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;margin-top:12px;">
-            <div style="background:#ffffff;padding:12px;border-radius:12px;width:210px;height:210px;display:flex;align-items:center;justify-content:center;">
-              ${this._qrInfo.qr_svg}
-            </div>
-            <div style="flex:1;min-width:220px;">
-              <div style="font-size:12px;opacity:0.75;">${this._t("qr_url")}:</div>
-              <input readonly value="${this._esc(this._qrInfo.launch_url)}" style="margin:6px 0 12px;" onclick="this.select()" />
+          <div class="browser-share">
+            <div class="browser-share-controls">
+              <div class="share-actions">
+                <button class="btn primary" id="share-browser-link">${this._t("browser_share")}</button>
+                <button class="btn" id="copy-browser-link">${this._t("browser_copy")}</button>
+              </div>
+              <p id="browser-copy-status" class="install-hint" role="status" hidden></p>
+              <label style="margin:10px 0 12px;">${this._t("qr_url")}
+                <input id="browser-url" readonly value="${this._esc(browserUrl)}" onclick="this.select()" />
+              </label>
               <div style="font-size:12px;opacity:0.75;margin-bottom:6px;">${this._t("qr_permitted")}:</div>
               <div style="display:flex;flex-wrap:wrap;gap:6px;">
                 ${(this._qrInfo.permitted_users || [])
@@ -1439,6 +1443,7 @@ class PwaAppStudioPanel extends HTMLElement {
                   .join("")}
               </div>
             </div>
+            <div class="browser-qr" role="img" aria-label="${this._t("qr_heading")}">${this._qrInfo.qr_svg}</div>
           </div>`
         }
       </div>
@@ -1748,9 +1753,34 @@ class PwaAppStudioPanel extends HTMLElement {
       }
     });
 
-    sr.getElementById("install-current-btn")?.addEventListener("click", () =>
-      this._handleInstallOnCurrentDevice()
-    );
+    const copyBrowserLink = async () => {
+      const input = sr.getElementById("browser-url");
+      const status = sr.getElementById("browser-copy-status");
+      status.hidden = false;
+      try {
+        await navigator.clipboard.writeText(input.value);
+        status.textContent = this._t("browser_copied");
+      } catch {
+        input.focus();
+        input.select();
+        status.textContent = this._t("browser_selected");
+      }
+    };
+    sr.getElementById("copy-browser-link")?.addEventListener("click", copyBrowserLink);
+    sr.getElementById("share-browser-link")?.addEventListener("click", async () => {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: this._apps.find(app => app.app_id === this._selectedAppId)?.manifest.name,
+            url: sr.getElementById("browser-url").value,
+          });
+          return;
+        } catch (error) {
+          if (error?.name === "AbortError") return;
+        }
+      }
+      await copyBrowserLink();
+    });
     sr.getElementById("refresh-qr-btn")?.addEventListener("click", () =>
       this._loadQrCode()
     );

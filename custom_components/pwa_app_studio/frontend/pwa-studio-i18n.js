@@ -181,6 +181,23 @@ const MESSAGES = {
   users_failed: ["Could not load accounts.", "Konten konnten nicht geladen werden."],
   link_copied: ["Companion link copied.", "Companion-Link kopiert."],
   link_selected: ["The link is selected. Copy it from the selection menu.", "Der Link ist markiert. Kopiere ihn über das Auswahlmenü."],
+  install_chrome: ["Open in Chrome to install", "Zum Installieren in Chrome öffnen"],
+  install_android_hint: ["If your phone keeps the page in Home Assistant, copy the link and paste it into the Chrome address bar.", "Wenn dein Handy die Seite in Home Assistant öffnet, kopiere den Link und füge ihn in die Chrome-Adressleiste ein."],
+  browser_share: ["Share link", "Link teilen"],
+  browser_copy: ["Copy browser link", "Browser-Link kopieren"],
+  browser_copied: ["Browser link copied.", "Browser-Link kopiert."],
+  browser_selected: ["The browser link is selected. Copy it from the selection menu.", "Der Browser-Link ist markiert. Kopiere ihn über das Auswahlmenü."],
+  install_help: ["Install this web app", "Diese Web-App installieren"],
+  install_native: ["Install now", "Jetzt installieren"],
+  install_open_chrome: ["Open in Chrome", "In Chrome öffnen"],
+  install_android: ["In Chrome, open the ⋮ menu and choose Install and create shortcut, then Install. The wording varies by Chrome version.", "Öffne in Chrome das Menü ⋮ und wähle „Installieren und Verknüpfung erstellen“ und danach „Installieren“. Die Bezeichnung kann je nach Chrome-Version abweichen."],
+  install_webview: ["This page is open inside an app. Open it in Chrome to install it on your home screen.", "Diese Seite ist in einer App geöffnet. Öffne sie in Chrome, um sie auf dem Startbildschirm zu installieren."],
+  install_ios: ["In Safari, tap Share, then Add to Home Screen. Enable Open as Web App if shown.", "Öffne die Seite in Safari. Tippe auf „Teilen“ und dann auf „Zum Home-Bildschirm“. Aktiviere „Als Web-App öffnen“, falls verfügbar."],
+  install_mac: ["In Safari, choose File → Add to Dock.", "Wähle in Safari „Ablage → Zum Dock hinzufügen“."],
+  install_desktop: ["Use the install option in your browser menu or address bar.", "Nutze die Installationsoption im Browser-Menü oder in der Adressleiste."],
+  install_https: ["Open the app at an HTTPS address with a valid certificate to install it.", "Öffne die App über eine HTTPS-Adresse mit gültigem Zertifikat, um sie zu installieren."],
+  install_close: ["Close installation instructions", "Installationshinweise schließen"],
+  install_retry_menu: ["Use your browser menu to finish installing.", "Verwende zum Installieren das Menü deines Browsers."],
 };
 
 export function studioLanguage(hass) {

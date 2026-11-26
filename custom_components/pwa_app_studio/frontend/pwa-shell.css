@@ -42,3 +42,33 @@ footer a { display: inline-block; padding: 4px; color: #dce5f3; font-size: .75re
 button { min-height: 44px; cursor: pointer; font: inherit; }
 .launch button { padding: .5rem 1rem; border: 0; border-radius: 2rem; background: #edf2ff; color: #182133; font-weight: 600; }
 :focus-visible { outline: 3px solid #facc15; outline-offset: 2px; }
+
+.install-banner {
+  flex: none;
+  max-height: 48dvh;
+  overflow: auto;
+  padding: 12px max(16px,env(safe-area-inset-right)) 14px max(16px,env(safe-area-inset-left));
+  background: #172238;
+  border-bottom: 1px solid #ffffff24;
+}
+.install-heading, .install-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.install-heading { justify-content: space-between; }
+.install-banner p { margin: 4px 0 10px; color: #dce5f3; font-size: .9rem; }
+.install-banner button, .install-banner a {
+  min-height:44px;
+  padding: 8px 14px;
+  border: 1px solid #ffffff36;
+  border-radius: 12px;
+  background: #243754;
+  color: #fff;
+  font: inherit;
+}
+.install-banner a { display:inline-flex; align-items:center; text-decoration:none; }
+.install-banner #pwa-install-btn, .install-banner a { background: #2563eb; }
+.install-banner input { width:100%; margin-top: 8px; padding: 8px; font: inherit; }
+.install-banner [hidden] { display: none; }

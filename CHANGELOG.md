@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.11.26.6
+
+- Open Android installation links in Chrome and show the native install button when the browser offers it.
+- Serve the adaptive Android app icon from its own route so the manifest can load it.
+- Keep installation guidance after sign-in and add share and copy buttons for the browser link.
+- Render larger, scalable black-and-white QR codes with a four-module quiet zone.
+
 ## 2026.11.26.5
 
 - Show the designer in English by default and automatically switch to German for German Home Assistant servers.

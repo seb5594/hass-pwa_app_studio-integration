@@ -134,8 +134,11 @@ class PwaServiceWorkerView(HomeAssistantView):
                 f"{base}/",
                 f"{base}/icon-192.png?v={app.version}",
                 f"{base}/icon-512.png?v={app.version}",
+                f"{base}/icon-maskable-512.png?v={app.version}",
                 f"{STATIC_URL_PATH}/pwa-shell.css?v={VERSION}",
                 f"{STATIC_URL_PATH}/pwa-runtime.js?v={VERSION}",
+                f"{STATIC_URL_PATH}/pwa-install.js",
+                f"{STATIC_URL_PATH}/pwa-studio-i18n.js",
             ]
         )
         offline_enabled = "true" if app.manifest.offline_enabled else "false"
@@ -235,8 +238,8 @@ class PwaOAuthClientView(HomeAssistantView):
 class PwaIconView(HomeAssistantView):
     '''Serves dynamically composited 180, 192, 512, and maskable-512 PNG icons.'''
 
-    url = f"{HTTP_BASE_PATH}/app/{{slug}}/icon-{{size}}.png"
-    extra_urls = [f"{HTTP_BASE_PATH}/app/{{slug}}/icon-maskable-{{size}}.png"]
+    url = f"{HTTP_BASE_PATH}/app/{{slug}}/icon-{{size:[0-9]+}}.png"
+    extra_urls = [f"{HTTP_BASE_PATH}/app/{{slug}}/icon-maskable-{{size:[0-9]+}}.png"]
     name = "pwa_app_studio:icon"
     requires_auth = False
 
@@ -252,7 +255,7 @@ class PwaIconView(HomeAssistantView):
             return web.Response(status=404, text="Icon not found")
         if size not in ("180", "192", "512"):
             return web.Response(status=400, text="Unsupported icon size")
-        maskable = "icon-maskable-" in request.path
+        maskable = request.path.rsplit("/", 1)[-1].startswith("icon-maskable-")
         png_bytes = await self._icon_composer.async_render_png(
             app.icon,
             int(size),

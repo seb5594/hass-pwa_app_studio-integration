@@ -80,9 +80,11 @@ For browser sharing, the guest-mode QR code uses the internal Home Assistant add
 
 ## Install the browser web app
 
-1. Open the saved app on the target device with the QR code, the browser link or **Install on this device**. Use a Home Assistant address reachable over HTTPS.
-2. Sign in to Home Assistant if the browser asks. On iPhone or iPad, open the link in Safari and use **Share → Add to Home Screen**. Turn on **Open as Web App** if it is shown. On Android, use Chrome’s **Install** or **Add to Home screen** action. On desktop, use the install option in a browser that offers it. [Apple instructions](https://support.apple.com/guide/iphone/iphea86e5236/ios) · [Chrome instructions](https://support.google.com/chrome/answer/9658361)
+1. On Android, select **Open in Chrome to install** under **Share**. If the phone keeps the page inside Home Assistant, select **Copy browser link**, launch Chrome itself and paste the link into its address bar. On other devices, use **Install on this device**. The target device needs an HTTPS address with a valid certificate.
+2. Sign in to Home Assistant if the browser asks. On iPhone or iPad, open the link in Safari and use **Share → Add to Home Screen**. Turn on **Open as Web App** if it is shown. On Android, choose **Install now** if Chrome offers the prompt. Otherwise choose **⋮ → Install and create shortcut → Install** in Chrome. The wording can vary by browser version. On desktop, use the install option in a browser that offers it. [Apple instructions](https://support.apple.com/guide/iphone/iphea86e5236/ios) · [Chrome instructions](https://support.google.com/chrome/answer/9658361)
 3. Tap the icon on your home screen to open the app. A standalone web app uses its browser session. If that session is missing, Home Assistant prompts you to sign in.
+
+**Share link** opens your device’s sharing menu. **Copy browser link** gives you the same URL as the QR code.
 
 Offline caching covers the app shell, icon and other public files. Cards, current states and device controls need a connection to Home Assistant.
 
