@@ -1,15 +1,12 @@
 /* Admin-only PWA Web-App Studio Designer custom panel with Live Device Preview, Multi-Card Composer, Icon Studio & QR Distribution. */
 
-// Keep dependencies on the same release as this entry point.
-const versionQuery = new URL(import.meta.url).search;
-const [{ chromeInstallLink }, { loadPwaCardHelpers }, { studioLanguage, studioMessage }] = await Promise.all([
-  import(`./pwa-install.js${versionQuery}`),
-  import(`./pwa-card-helpers.js${versionQuery}`),
-  import(`./pwa-studio-i18n.js${versionQuery}`),
-]);
+import { chromeInstallLink } from "./pwa-install.js";
+import { loadPwaCardHelpers } from "./pwa-card-helpers.js";
+import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
 
 const STUDIO_ACCENT = "#2563eb";
 const STUDIO_LOGO = new URL("./studio-logo.png", import.meta.url).href;
+const SHELL_CSS = new URL("./pwa-shell.css", import.meta.url).href;
 
 const STEPS = [
   { id: "general", label: "step_app", icon: "creation-outline", title: "general_title", hint: "general_hint" },
@@ -1467,7 +1464,7 @@ class PwaAppStudioPanel extends HTMLElement {
     const sample = sr.getElementById("launch-sample");
     if (sample) {
       const shadow = sample.attachShadow({ mode: "open" });
-      shadow.innerHTML = `<link rel="stylesheet" href="/pwa_app_studio_static/pwa-shell.css">
+      shadow.innerHTML = `<link rel="stylesheet" href="${SHELL_CSS}">
         <div class="launch" aria-hidden="true" style="color:white">
           <div class="welcome"><div class="mark"><span style="font-size:48px">⌂</span></div>
           <h1></h1><p>${this._t("launch_loading")}</p></div></div>`;

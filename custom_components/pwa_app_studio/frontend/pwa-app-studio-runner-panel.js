@@ -1,7 +1,6 @@
 /* Hidden native HA panel rendering authorized PWAs inside the HA context-request tree. */
 
-// Keep dependencies on the same release as this entry point.
-const { loadPwaCardHelpers } = await import(`./pwa-card-helpers.js${new URL(import.meta.url).search}`);
+import { loadPwaCardHelpers } from "./pwa-card-helpers.js";
 
 class PwaAppStudioRunnerPanel extends HTMLElement {
   constructor() {

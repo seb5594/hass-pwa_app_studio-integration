@@ -53,7 +53,7 @@ class PwaAppShellView(HomeAssistantView):
   <link rel="icon" type="image/png" sizes="192x192" href="{base}/icon-192.png?v={ver}" />
   <link rel="apple-touch-icon" sizes="180x180" href="{base}/icon-180.png?v={ver}" />
   <link rel="manifest" href="{base}/manifest.webmanifest?v={ver}" />
-  <link rel="stylesheet" href="{STATIC_URL_PATH}/pwa-shell.css?v={VERSION}" />
+  <link rel="stylesheet" href="{STATIC_URL_PATH}/pwa-shell.css" />
   <style>:root {{ --app-accent: {escaped_theme}; --app-bg: {escaped_bg}; }}</style>
 </head>
 <body>
@@ -76,7 +76,7 @@ class PwaAppShellView(HomeAssistantView):
   <footer><a href="https://github.com/seb5594" target="_blank" rel="noopener noreferrer">
     App {html.escape(VERSION)} developed by seb5594 (Sebastian Schmidt)<br />
     Made with ❤️ in Germany 🇩🇪</a></footer>
-  <script type="module" src="{STATIC_URL_PATH}/pwa-runtime.js?v={VERSION}"></script>
+  <script type="module" src="{STATIC_URL_PATH}/pwa-runtime.js"></script>
 </body>
 </html>
 """
@@ -135,10 +135,10 @@ class PwaServiceWorkerView(HomeAssistantView):
                 f"{base}/icon-192.png?v={app.version}",
                 f"{base}/icon-512.png?v={app.version}",
                 f"{base}/icon-maskable-512.png?v={app.version}",
-                f"{STATIC_URL_PATH}/pwa-shell.css?v={VERSION}",
-                f"{STATIC_URL_PATH}/pwa-runtime.js?v={VERSION}",
-                f"{STATIC_URL_PATH}/pwa-install.js?v={VERSION}",
-                f"{STATIC_URL_PATH}/pwa-studio-i18n.js?v={VERSION}",
+                f"{STATIC_URL_PATH}/pwa-shell.css",
+                f"{STATIC_URL_PATH}/pwa-runtime.js",
+                f"{STATIC_URL_PATH}/pwa-install.js",
+                f"{STATIC_URL_PATH}/pwa-studio-i18n.js",
             ]
         )
         offline_enabled = "true" if app.manifest.offline_enabled else "false"

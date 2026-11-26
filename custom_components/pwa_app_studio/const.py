@@ -14,7 +14,7 @@ PANEL_WEBCOMPONENT = "pwa-app-studio-panel"
 RUNNER_PANEL_URL_PATH = "pwa-app-studio-runner"
 RUNNER_WEBCOMPONENT = "pwa-app-studio-runner-panel"
 
-STATIC_URL_PATH = "/pwa_app_studio_static"
+STATIC_URL_PATH = f"/pwa_app_studio_static-{VERSION}"
 HTTP_BASE_PATH = "/pwa_app_studio"
 API_BASE_PATH = "/api/pwa_app_studio"
 

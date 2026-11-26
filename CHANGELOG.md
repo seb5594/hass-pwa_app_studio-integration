@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.11.26.8
+
+- Use a versioned frontend directory with ordinary module imports for the Home Assistant panel loader.
+
 ## 2026.11.26.7
 
 - Load frontend dependencies from the same release so stale translations cannot break the Share step.
