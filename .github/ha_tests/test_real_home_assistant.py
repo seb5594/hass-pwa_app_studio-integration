@@ -30,6 +30,9 @@ async def _real_home_assistant(verify_cleanup, enable_custom_integrations, hass,
         monkeypatch.setattr(http.HomeAssistantHTTP, "async_bind", AsyncMock())
     if hasattr(http, "async_get_source_ip"):
         monkeypatch.setattr(http, "async_get_source_ip", AsyncMock(return_value="127.0.0.1"))
+    # Legacy onboarding imports recorder through analytics. Load the actual HTTP,
+    # frontend and Lovelace paths without starting this unrelated telemetry stack.
+    hass.config.components.add("analytics")
     assert await async_setup_component(hass, "panel_custom", {})
     assert await async_setup_component(hass, "lovelace", {})
 

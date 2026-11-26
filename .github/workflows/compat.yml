@@ -44,6 +44,9 @@ jobs:
     if: needs.releases.outputs.releases != '[]'
     name: Home Assistant ${{ matrix.homeassistant }}${{ matrix.preview && ' (preview)' || '' }}
     runs-on: ubuntu-latest
+    env:
+      # This Core version pins lru-dict 1.1.7, which predates the stricter GCC default.
+      CFLAGS: ${{ matrix.homeassistant == '2022.4.7' && '-Wno-error=incompatible-pointer-types' || '' }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
