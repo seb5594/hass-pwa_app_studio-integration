@@ -2,41 +2,49 @@
 
 <img src="custom_components/pwa_app_studio/frontend/studio-logo.png" width="96" height="96" alt="Logo von PWA Web-App Studio" />
 
-[English](README.md) | **Deutsch**
+[🇬🇧 English](README.md) · **🇩🇪 Deutsch**
 
-Mit PWA Web-App Studio erstellen Administratoren installierbare Web-Apps aus Lovelace-Dashboards oder ausgewählten Karten. Jede App hat eine eigene URL, ein Icon und eigene Freigaben.
+Du willst dein Küchen-Dashboard aufs Wandtablet holen, den Garten vom Handy aus im Blick behalten oder Besuchern ein paar Bedienelemente freigeben? Mit PWA Web-App Studio machst du aus einem Home-Assistant-Dashboard oder aus einzelnen Lovelace-Karten eine Web-App. Jede App bekommt einen eigenen Link, ein eigenes Symbol, eigene Farben und eine eigene Freigabe.
 
-## Ersten Entwurf ausprobieren
+## Installation
 
-1. Kopiere `custom_components/pwa_app_studio/` in den Ordner `custom_components/` einer Home-Assistant-Testinstallation.
-2. Starte Home Assistant neu und füge **PWA Web-App Studio** unter **Einstellungen > Geräte & Dienste > Integration hinzufügen** hinzu.
-3. Öffne **PWA Web-App Studio** in der Seitenleiste, wähle ein Dashboard oder füge Karten hinzu und speichere die App.
-4. Öffne den Installationslink oder QR-Code auf einem Gerät, das Home Assistant über HTTPS erreicht.
+Du brauchst **Home Assistant Core ab 2021.12.0** und ein Administratorkonto für den Designer. Welche Karten es gibt, hängt von deiner Home-Assistant-Version ab. Auf älteren Installationen bietet das Studio zum Beispiel eine Schaltflächenkarte anstelle der Tile-Karte an.
 
-Die App verwendet das angemeldete Home-Assistant-Konto. Für ein Dashboard gelten weiterhin dessen Berechtigungen in Home Assistant. Der Offline-Cache speichert die App-Hülle und statische Dateien. Lovelace-Inhalte brauchen eine Verbindung zu Home Assistant.
+### Marketplace oder HACS
 
+1. Öffne ab Home Assistant 2026.11 **Einstellungen → Marketplace**. Auf früheren Versionen öffnest du **HACS**, sofern es installiert ist.
+2. Suche nach **PWA Web-App Studio** oder nutze das Badge **HACS · Marketplace** in der englischen README. Fehlt das Projekt in der Suche, füge `https://github.com/seb5594/hass-pwa_app_studio-integration` im Marketplace über **Über Link hinzufügen** (*Add from link*) ein. In HACS findest du die Option unter **Benutzerdefinierte Repositories**. Verbinde im Marketplace bei Nachfrage dein GitHub-Konto und wähle bei einer Typabfrage **Integration**. [Hilfe zum Marketplace](https://www.home-assistant.io/integrations/marketplace/#custom-repositories) · [Benutzerdefinierte Repositories in HACS](https://hacs.xyz/docs/faq/custom_repositories/)
+3. Tippe im Marketplace auf **Installieren** und fülle das Einrichtungsformular aus. In HACS lädst du die Integration herunter, startest Home Assistant neu und wählst unter **Einstellungen → Geräte & Dienste → Integration hinzufügen** das **PWA Web-App Studio** aus.
 
-## Start, Freigabe und Sitzung
+### Aus der ZIP-Datei installieren
 
-- **App → Animation beim Öffnen** bietet sanfte Wellen, einen Leuchtschein und ein Standbild. Das Startbild verwendet das App-Symbol und die gewählten Farben. Die Systemoption für reduzierte Bewegung wird berücksichtigt.
-- **Zugriff → Gäste im Heimnetz** lässt dich einzelne Konten ohne Administratorrechte mit „Nur lokaler Zugriff“ freigeben. Der QR-Code nutzt die interne Home-Assistant-Adresse. Das Gastkonto behält seine übrigen Rechte in Home Assistant.
-- **Teilen** bietet den Companion-Link und den QR-Code zur Installation der Web-App.
+1. Lade `pwa_app_studio.zip` aus dem [aktuellen Release](https://github.com/seb5594/hass-pwa_app_studio-integration/releases/latest) herunter.
+2. Entpacke den Inhalt in `custom_components/pwa_app_studio/` im Konfigurationsordner von Home Assistant. Die Manifest-Datei liegt danach unter `custom_components/pwa_app_studio/manifest.json`.
+3. Starte Home Assistant neu und füge **PWA Web-App Studio** unter **Einstellungen → Geräte & Dienste → Integration hinzufügen** hinzu.
+
+Lass die Seitenleistenoption eingeschaltet, wenn du den Designer schnell erreichen möchtest. Du erreichst ihn auch direkt über `/pwa-app-studio` auf deiner Home-Assistant-Instanz.
+
+## Deine erste App erstellen
+
+Öffne **PWA Web-App Studio** und klicke auf **+ Neue PWA**.
+
+1. **App**. Gib der App einen Namen und einen Kurznamen für den Startbildschirm. Wähle Akzent- und Hintergrundfarbe. Neue Apps starten mit Blau (`#2563EB`). Unter **Animation beim Öffnen** wählst du sanfte Wellen, einen Leuchtschein oder ein Standbild. Mit **Startanimation ansehen** siehst du das Ergebnis mit deinem Symbol und deinen Farben.
+2. **Inhalt**. Wähle ein Dashboard und bei Bedarf eine bestimmte Ansicht. Für eine kleinere App stellst du einzelne Karten zusammen und legst ihr Layout fest.
+3. **Symbol**. Verwende das Home-Assistant- oder Dashboard-Symbol, wähle ein MDI-Symbol oder lade ein eigenes Bild hoch. In der Vorschau kannst du zwischen Smartphone, Tablet und Computer wechseln.
+4. **Zugriff**. Wähle, wer die App öffnen darf. Du kannst sie für alle angemeldeten Konten, für ausgewählte Personen, für Gäste im Heimnetz oder nur für Administratoren freigeben. Klicke auf **Speichern**.
+5. **Teilen**. Öffne die App in der Companion-App, kopiere den Link oder nutze den QR-Code für die Browser-Version.
+
+Die App verwendet die Home-Assistant-Rechte des angemeldeten Kontos. Berücksichtige das bei der Wahl des Dashboards, wenn du die App weitergibst.
 
 ## In der Companion-App anmelden und die erstellte App öffnen
 
-1. Öffne auf dem Handy die offizielle **Home Assistant**-App. Falls dein Server dort noch fehlt, tippe auf **Mit meinem Home-Assistant-Server verbinden** oder unter **Einstellungen → Companion-App** auf **Server hinzufügen**. Wähle die richtige Instanz aus oder trage ihre Adresse ein. Gib Benutzername, Passwort und gegebenenfalls den zweiten Faktor im Anmeldefenster der Companion-App ein. Sobald du dein Home-Assistant-Dashboard siehst, bist du angemeldet. [Einrichtung der Companion-App](https://companion.home-assistant.io/docs/getting_started/#step-by-step-setup)
-2. Öffne als Administrator **PWA Web-App Studio** in der Home-Assistant-Seitenleiste. Wähle deine App, prüfe unter **Zugriff** die Freigabe für das Konto auf dem Handy und speichere. Öffne **Teilen**.
-3. Tippe auf dem Handy auf **In Home Assistant öffnen**. Wenn der Designer auf einem anderen Gerät geöffnet ist, verwende **Companion-Link kopieren** und teile den Link mit dem Handy. Öffne ihn dort und wähle bei mehreren Servern die Instanz mit dieser App. Die Ansicht öffnet sich mit der aktiven Sitzung in Home Assistant. [Companion-Navigationslinks für Android und iOS](https://companion.home-assistant.io/docs/integrations/url-handler/#navigate)
+1. Öffne auf dem Handy die offizielle **Home Assistant**-App. Wenn du das Dashboard deiner Instanz bereits siehst, bist du angemeldet. Andernfalls wähle **Mit meinem Home-Assistant-Server verbinden** oder bei einer bestehenden Einrichtung **Einstellungen → Companion-App → Server hinzufügen**. Wähle deinen Server oder gib die Adresse ein und melde dich direkt in der App an. [Einrichtung der Companion-App](https://companion.home-assistant.io/docs/getting_started/#step-by-step-setup)
+2. Öffne die gespeicherte App im Studio und tippe unter **Teilen** auf **In Home Assistant öffnen**. Wenn du am Computer sitzt, wähle **Companion-Link kopieren** und schicke den Link ans Handy.
+3. Tippe auf den Link und wähle bei Nachfrage den richtigen Server. Die Ansicht öffnet sich mit der aktiven Sitzung deiner Companion-App. [Navigationslinks für Android und iOS](https://companion.home-assistant.io/docs/integrations/url-handler/#navigate)
 
-### Für Gäste im Heimnetz
+### Eine Schaltfläche im Dashboard anlegen
 
-1. Erstelle unter **Einstellungen → Personen → Benutzer** ein Konto mit Anmeldung und **Nur lokaler Zugriff**. Lasse **Administrator** deaktiviert. [Home Assistant Benutzerverwaltung](https://www.home-assistant.io/docs/configuration/user-configuration/)
-2. Wähle im Studio **Zugriff → Gäste im Heimnetz**, markiere das Konto und speichere. Wenn du das Konto gerade erstellt hast, verwende **Konten neu laden**.
-3. Der Gast verbindet sein Handy mit deinem Heim-WLAN und fügt deine **interne Home-Assistant-Adresse** in seiner Companion-App hinzu. Er meldet sich dort einmal mit dem Gastkonto an und öffnet den Companion-Link für deine Instanz.
-
-### Direkt vom Home-Assistant-Dashboard starten
-
-Wenn dein Messenger den Companion-Link als Text anzeigt oder du einen festen Einstieg im Dashboard möchtest, öffne im Studio **Teilen → Link und Dashboard-Pfad anzeigen**. Kopiere den relativen Pfad und lege als Administrator auf einem Dashboard, das das Konto öffnen darf, eine **Schaltflächenkarte** an. Wähle als Tipp-Aktion **Navigieren** und trage den Pfad ein. [Dashboard-Aktionen in Home Assistant](https://www.home-assistant.io/dashboards/actions/)
+Du willst einen festen Platz zum Öffnen der App? Kopiere unter **Teilen → Link und Dashboard-Pfad anzeigen** den Dashboard-Pfad. Füge auf einem Dashboard, das das Konto öffnen darf, eine Schaltflächenkarte hinzu. Wähle **Navigieren** als Tipp-Aktion und füge den Pfad ein. Für eine App mit dem URL-Namen `mein-garten` sieht das Beispiel so aus. [Dashboard-Aktionen in Home Assistant](https://www.home-assistant.io/dashboards/actions/)
 
 ```yaml
 type: button
@@ -47,8 +55,27 @@ tap_action:
   navigation_path: /pwa-app-studio-runner/mein-garten
 ```
 
-Der QR-Code und **Auf diesem Gerät installieren** öffnen die eigenständige Browser-Web-App. Diese verwendet die Sitzung des jeweiligen Browsers und zeigt die Home-Assistant-Anmeldung, wenn dort noch keine Sitzung vorhanden ist.
+## Für Gäste im Heimnetz freigeben
 
-Die Mindestversion von Home Assistant Core ist **2021.12.0** (HACS-Metadaten). Auf älteren Core-Versionen bietet der Designer eine Schaltflächenkarte an, wenn die Tile-Karte noch nicht verfügbar ist. Für die Installation der PWA selbst ist ein aktueller Browser erforderlich.
+1. Lege unter **Einstellungen → Personen → Benutzer** ein Konto an. Schalte **Nur lokaler Zugriff** ein und lass **Administrator** ausgeschaltet. [Benutzerkonten in Home Assistant](https://www.home-assistant.io/docs/configuration/user-configuration/#about-persons-and-users)
+2. Wähle im Studio **Zugriff → Gäste im Heimnetz**, markiere das Gastkonto und speichere. Wenn das Studio beim Anlegen des Kontos schon geöffnet war, verwende **Konten neu laden**.
+3. Der Gast verbindet sein Handy mit deinem Heim-WLAN, fügt in seiner Companion-App deine interne Home-Assistant-Adresse hinzu und meldet sich mit dem Gastkonto an. Gib ihm den Companion-Link oder die Schaltfläche im Dashboard.
 
-[Architekturprüfung](docs/architekturpruefung.md)
+Beim Teilen über den Browser verwendet der Gast-QR-Code die interne Home-Assistant-Adresse. Fehlt der QR-Code, prüfe die interne URL unter **Einstellungen → System → Netzwerk** und ob das Gastgerät sie erreichen kann.
+
+## Die Browser-Web-App installieren
+
+1. Öffne die gespeicherte App auf dem Zielgerät über den QR-Code, den Browser-Link oder **Auf diesem Gerät installieren**. Verwende eine Home-Assistant-Adresse, die das Gerät über HTTPS öffnen kann.
+2. Melde dich bei Home Assistant an, falls der Browser danach fragt. Auf iPhone und iPad öffnest du den Link in Safari und wählst **Teilen → Zum Home-Bildschirm**. Aktiviere **Als Web-App öffnen**, wenn Safari die Option zeigt. Auf Android findest du in Chrome **Installieren** oder **Zum Startbildschirm hinzufügen**. Am Computer verwendest du die Installationsoption deines Browsers, sofern er sie anbietet. [Anleitung von Apple](https://support.apple.com/de-de/guide/iphone/iphea86e5236/ios) · [Anleitung für Chrome](https://support.google.com/chrome/answer/9658361?hl=de)
+3. Öffne die App über das Symbol auf dem Startbildschirm. Die eigenständig installierte App verwendet ihre Browsersitzung. Wenn dort noch keine Sitzung vorhanden ist, zeigt Home Assistant die Anmeldung an.
+
+Der Offline-Cache speichert die App-Hülle, das Symbol und weitere öffentliche Dateien. Karten, aktuelle Zustände und die Bedienung deiner Geräte brauchen eine Verbindung zu Home Assistant.
+
+## Fragen oder etwas klappt nicht?
+
+- **Zugriff verweigert.** Prüfe, welches Konto angemeldet ist und ob es unter **Zugriff** freigegeben wurde. Bei Gästen muss das Handy die interne Adresse aus deinem Heimnetz erreichen.
+- **Der Companion-Link bleibt als Text stehen.** Verwende eine Schaltfläche im Dashboard mit dem relativen Pfad aus dem Designer.
+- **Die Installationsoption fehlt.** Öffne den Browser-Link auf iPhone oder iPad in Safari. Verwende auf anderen Geräten einen Chromium-Browser mit App-Installation und prüfe, ob sich die HTTPS-Adresse ohne Zertifikatfehler öffnen lässt.
+- **Eine Karte fehlt.** Prüfe die Karte zuerst in Home Assistant mit demselben Konto. Bei einer benutzerdefinierten Karte prüfe auch, ob ihre Ressource im Frontend verfügbar ist.
+
+Wenn du festhängst, gib am besten deine Core-Version, die Studio-Version, das Gerät und die Schritte an, mit denen sich das Problem nachstellen lässt. [Problem melden](https://github.com/seb5594/hass-pwa_app_studio-integration/issues) · [Versionsverlauf](CHANGELOG.md) · [Architektur](docs/architekturpruefung.md)
