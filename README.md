@@ -43,7 +43,7 @@ Keep the administrator sidebar option enabled for quick access. You can also rea
 
 Open **PWA Web-App Studio** and select **+ New web app**. The designer uses English by default and switches to German when the Home Assistant system language under **Settings → System → General** is German. Older servers that only expose the frontend language use that setting instead.
 
-1. **App**. Enter a name and a short name for the home screen. Pick an accent and background color. New apps start with blue (`#2563EB`). Under **Launch animation**, choose soft ripples, a glow or a still image. Use **Preview the launch animation** to see it with your colors and icon.
+1. **App**. Enter a name and a short name for the home screen. Pick an accent and background color. New apps start with blue (`#2563EB`). Choose a **Launch animation** to see it with your colors and icon. The preview has a **Replay animation** button. Choose **Still image** to turn off animation for the app.
 2. **Content**. Choose a dashboard and, if you like, a specific view. For a smaller app, assemble individual cards and choose their layout.
 3. **Icon**. Use a Home Assistant or dashboard icon, choose an MDI icon, or upload an image. The preview can show a phone, tablet or desktop layout.
 4. **Access**. Pick who can open the app. Choose all signed-in users, selected accounts, local guests or administrators. Save with **Save**.

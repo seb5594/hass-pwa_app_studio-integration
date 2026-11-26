@@ -952,6 +952,8 @@ class PwaAppStudioPanel extends HTMLElement {
         details { margin-top:16px; border-top:1px solid var(--divider-color,#8885); }
         summary { padding:12px 0; cursor:pointer; font-weight:600; }
         #launch-sample { position:relative; height:17rem; overflow:hidden; border-radius:18px; }
+        #replay-launch { min-height:44px; margin-top:8px; }
+        @media (prefers-reduced-motion: reduce) { #replay-launch { display:none; } }
         .card-box svg { max-width:100%; height:auto; }
         .guest-note { margin:14px 0; padding:16px; border-radius:16px; background:color-mix(in srgb,var(--studio-accent) 10%,var(--card-background-color,#1e293b)); }
         .guest-note button { min-height:44px; margin:4px 0; }
@@ -1094,12 +1096,14 @@ class PwaAppStudioPanel extends HTMLElement {
           </label>
           <label style="margin-top:12px">${this._t("launch_animation")}
             <select id="f-launch">
-              ${[["ripple",this._t("launch_ripple")],["glow",this._t("launch_glow")],["still",this._t("launch_still")]].map(([key,title]) =>
-                `<option value="${key}" ${(d.manifest.launch_style || "ripple") === key ? "selected" : ""}>${title}</option>`).join("")}
+              ${["ripple", "glow", "aurora", "orbit", "sheen", "rise", "still"].map((style) =>
+                `<option value="${style}" ${(d.manifest.launch_style || "ripple") === style ? "selected" : ""}>${this._t(`launch_${style}`)}</option>`).join("")}
             </select>
           </label>
-          <details class="launch-preview"><summary>${this._t("show_launch")}</summary>
+          <details class="launch-preview" ${this.shadowRoot.querySelector(".launch-preview")?.open ? "open" : ""}>
+            <summary>${this._t("show_launch")}</summary>
             <div id="launch-sample"></div>
+            <button type="button" class="btn" id="replay-launch">${this._t("replay_launch")}</button>
           </details>
           <details><summary>${this._t("advanced")}</summary>
           <div class="field-grid">
@@ -1465,20 +1469,36 @@ class PwaAppStudioPanel extends HTMLElement {
     if (sample) {
       const shadow = sample.attachShadow({ mode: "open" });
       shadow.innerHTML = `<link rel="stylesheet" href="${SHELL_CSS}">
+        <style>
+          .launch { padding:12px; }
+          .welcome { padding:12px 0; }
+          .launch h1 { font-size:clamp(1.3rem, 5vw, 2rem); }
+        </style>
         <div class="launch" aria-hidden="true" style="color:white">
           <div class="welcome"><div class="mark"><span style="font-size:48px">⌂</span></div>
           <h1></h1><p>${this._t("launch_loading")}</p></div></div>`;
+      const launch = shadow.querySelector(".launch");
+      const preview = sr.querySelector(".launch-preview");
+      const replay = sr.getElementById("replay-launch");
       const updateSample = () => {
         const manifest = this._draft.manifest;
         sample.style.setProperty("--app-accent", manifest.theme_color);
         sample.style.setProperty("--app-bg", manifest.background_color);
-        shadow.querySelector(".launch").dataset.style = manifest.launch_style || "ripple";
+        launch.dataset.style = manifest.launch_style || "ripple";
         shadow.querySelector("h1").textContent = manifest.name;
-        if (this._iconPreviewUrl) this._updateSampleIcon(sample);
+        replay.hidden = launch.dataset.style === "still";
       };
-      sr.querySelector(".launch-preview").ontoggle = updateSample;
+      replay.onclick = () => {
+        const style = launch.dataset.style;
+        delete launch.dataset.style;
+        // Commit the removal of the CSS animation before applying the same style again.
+        void launch.offsetWidth;
+        launch.dataset.style = style;
+      };
+      sr.getElementById("f-launch").addEventListener("change", () => { preview.open = true; });
       sr.querySelector(".editor-pane").addEventListener("input", updateSample);
       updateSample();
+      if (this._iconPreviewUrl) this._updateSampleIcon(sample);
     }
     for (const button of sr.querySelectorAll("[data-pane-target]")) {
       button.onclick = () => {

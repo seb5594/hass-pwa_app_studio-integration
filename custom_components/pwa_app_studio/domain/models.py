@@ -263,7 +263,7 @@ class PwaManifestOptions:
             orientation = OrientationMode.ANY
 
         launch_style = data.get("launch_style", "ripple")
-        if launch_style not in ("ripple", "glow", "still"):
+        if launch_style not in ("ripple", "glow", "aurora", "orbit", "sheen", "rise", "still"):
             launch_style = "ripple"
 
         shortcuts = [

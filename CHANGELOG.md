@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.11.26.9
+
+- Add Aurora, Orbit, Light sweep and Soft entrance launch animations with an instant preview and replay in the designer.
+
 ## 2026.11.26.8
 
 - Use a versioned frontend directory with ordinary module imports for the Home Assistant panel loader.

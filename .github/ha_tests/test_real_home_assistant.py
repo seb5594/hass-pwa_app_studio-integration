@@ -120,7 +120,8 @@ async def test_failed_storage_does_not_change_live_app(studio, monkeypatch):
     assert [a.to_dict() for a in studio.list_apps()] == [original]
 
 
-async def test_shell_launch_settings_and_footer(studio):
+@pytest.mark.parametrize("launch_style", ["ripple", "glow", "aurora", "orbit", "sheen", "rise", "still"])
+async def test_shell_launch_settings_and_footer(studio, launch_style):
     from custom_components.pwa_app_studio.const import VERSION
     from custom_components.pwa_app_studio.domain.models import PwaApp
     from custom_components.pwa_app_studio.presentation.http_views import PwaAppShellView
@@ -133,10 +134,11 @@ async def test_shell_launch_settings_and_footer(studio):
     assert restored.manifest.launch_style == "ripple"
     assert not restored.access.local_guests
     app = await studio.async_update_app(app.app_id, {"manifest": {
-        "name": "Küche & Garten", "launch_style": "still",
+        "name": "Küche & Garten", "launch_style": launch_style,
     }})
+    assert PwaApp.from_dict(app.to_dict()).manifest.launch_style == launch_style
     shell = (await PwaAppShellView(studio).get({}, app.slug)).text
-    assert 'data-style="still"' in shell
+    assert f'data-style="{launch_style}"' in shell
     assert "Küche &amp; Garten" in shell
     assert f"App {VERSION} developed by seb5594 (Sebastian Schmidt)" in shell
     assert "Made with ❤️ in Germany 🇩🇪" in shell
