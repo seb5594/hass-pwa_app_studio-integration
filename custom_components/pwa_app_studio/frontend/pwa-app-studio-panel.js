@@ -2,6 +2,8 @@
 
 import { loadPwaCardHelpers } from "./pwa-card-helpers.js";
 
+const STUDIO_LOGO = new URL("./studio-logo.png", import.meta.url).href;
+
 const STEPS = [
   { id: "general", label: "App", icon: "creation-outline", title: "Wie heißt deine App?", hint: "Wähle einen Namen, eine Farbe und den ersten Eindruck beim Öffnen." },
   { id: "content", label: "Inhalt", icon: "view-dashboard-outline", title: "Was soll deine App zeigen?", hint: "Übernimm ein Dashboard oder stelle einzelne Karten zusammen." },
@@ -662,6 +664,7 @@ class PwaAppStudioPanel extends HTMLElement {
           border-bottom: 1px solid var(--divider-color, rgba(255,255,255,0.12));
           gap: 12px;
         }
+        .studio-logo { width:40px; height:40px; flex:none; object-fit:contain; }
         .topbar-left {
           display: flex;
           align-items: center;
@@ -912,6 +915,7 @@ class PwaAppStudioPanel extends HTMLElement {
           :host {display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden}
           .topbar {padding:8px 12px;gap:6px;flex-wrap:wrap}
           .topbar-left {gap:6px}
+          .studio-logo {width:34px;height:34px}
           .topbar strong {font-size:15px!important}
           .menu-btn {display:inline-flex;align-items:center;justify-content:center;min-width:44px}
           .topbar .btn {padding:8px 12px}
@@ -949,6 +953,9 @@ class PwaAppStudioPanel extends HTMLElement {
         .guest-note button { min-height:44px; margin:4px 0; }
         .guest-note a { color:inherit; text-underline-offset:3px; }
         .companion-link { display:inline-flex; align-items:center; min-height:44px; text-decoration:none; }
+        .companion-card p { margin:8px 0 14px; line-height:1.5; }
+        .share-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+        .share-actions .btn { min-height:44px; }
         .access-user { display:flex; align-items:center; gap:10px; }
         .editor-pane input,.editor-pane select { min-width:0; }
       </style>
@@ -956,10 +963,8 @@ class PwaAppStudioPanel extends HTMLElement {
       <div class="topbar">
         <div class="topbar-left">
           <button class="menu-btn" id="toggle-menu-btn" aria-label="Menü öffnen"><ha-icon icon="mdi:menu"></ha-icon></button>
-          <div>
-            <strong style="font-size:17px;">PWA Web-App Studio</strong>
-
-          </div>
+          <img class="studio-logo" src="${STUDIO_LOGO}" width="40" height="40" alt="" />
+          <strong style="font-size:17px;">PWA Web-App Studio</strong>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
           <button class="btn" id="new-app-btn">+ Neue PWA</button>
@@ -1348,7 +1353,7 @@ class PwaAppStudioPanel extends HTMLElement {
           ${mode === "guest" ? `<div class="guest-note"><p><strong>Gäste einrichten</strong></p>
             <ol><li>Erstelle für deinen Gast ein Konto ohne Administratorrechte. Aktiviere „Nur lokaler Zugriff“.</li>
             <li>Wähle das Konto hier aus und speichere die App.</li>
-            <li>Verbinde das Handy mit deinem WLAN. Öffne den QR-Code über die lokale Adresse und melde dich mit dem Gastkonto an.</li></ol>
+            <li>Der Gast meldet sich im Heim-WLAN in seiner Companion-App an und öffnet den Companion-Link aus dem Schritt „Teilen“.</li></ol>
             <a href="/config/users" target="_blank" rel="noopener">Benutzerverwaltung öffnen ↗</a>
             <button type="button" class="btn" id="reload-users">Konten neu laden</button>
             <p>Das Konto behält seine übrigen Home-Assistant-Rechte.</p></div>` : ""}
@@ -1361,16 +1366,36 @@ class PwaAppStudioPanel extends HTMLElement {
       `;
     }
 
+    const saved = this._apps.find(app => app.app_id === this._selectedAppId);
+    const runnerPath = saved ? `/pwa-app-studio-runner/${saved.slug}` : "";
+    const companionUrl = runnerPath ? `homeassistant://navigate${runnerPath}` : "";
     return `
+      <div class="card-box companion-card">
+        <strong>In der Home Assistant Companion-App öffnen</strong>
+        ${companionUrl ? `
+          <p>Öffne die App auf deinem Handy mit der Anmeldung, die du dort in Home Assistant schon verwendest.</p>
+          <div class="share-actions">
+            <a class="btn primary companion-link" href="${this._esc(companionUrl)}">In Home Assistant öffnen ↗</a>
+            <button type="button" class="btn" id="copy-companion-link">Companion-Link kopieren</button>
+          </div>
+          <p id="companion-copy-status" role="status" hidden></p>
+          <details id="companion-link-details">
+            <summary>Link und Dashboard-Pfad anzeigen</summary>
+            <label>Companion-Link zum Weitergeben
+              <input id="companion-url" type="text" readonly value="${this._esc(companionUrl)}" />
+            </label>
+            <label>Pfad für eine Schaltfläche im Home-Assistant-Dashboard
+              <input type="text" readonly value="${this._esc(runnerPath)}" />
+            </label>
+          </details>` : "<p>Speichere deine App, um den Companion-Link zu erhalten.</p>"}
+      </div>
       <div class="card-box">
-        <strong>Installation auf diesem Gerät</strong>
+        <strong>Als Web-App auf dem Startbildschirm installieren</strong>
         <p style="font-size:13px;opacity:0.85;">
           Dein Gerät: <b>${this._esc(detected.osLabel)}</b>
         </p>
         <div style="display:flex;flex-wrap:wrap;gap:10px;">
           <button class="btn primary" id="install-current-btn" ${this._qrInfo ? "" : "disabled"}>Auf diesem Gerät installieren</button>
-          ${this._qrInfo?.companion_url ? `<a class="btn companion-link" href="${this._esc(this._qrInfo.companion_url)}">In Home Assistant öffnen ↗</a>` : ""}
-
           ${
             this._selectedAppId
               ? `<button class="btn" id="refresh-qr-btn">QR-Code aktualisieren</button>`
@@ -1380,7 +1405,7 @@ class PwaAppStudioPanel extends HTMLElement {
       </div>
 
       <div class="card-box">
-        <strong>QR-Code für andere registrierte Benutzer</strong>
+        <strong>QR-Code für die Browser-Web-App</strong>
         ${
           !this._selectedAppId
             ? `<p style="font-size:13px;opacity:0.75;">Bitte speichere die App zunächst über "Speichern", um einen QR-Code zu erzeugen.</p>`
@@ -1696,6 +1721,21 @@ class PwaAppStudioPanel extends HTMLElement {
           .map((el) => el.value);
         this._draft.access.allowed_user_ids = checked;
       });
+    });
+
+    sr.getElementById("copy-companion-link")?.addEventListener("click", async () => {
+      const url = sr.getElementById("companion-url");
+      const status = sr.getElementById("companion-copy-status");
+      status.hidden = false;
+      try {
+        await navigator.clipboard.writeText(url.value);
+        status.textContent = "Companion-Link kopiert.";
+      } catch {
+        sr.getElementById("companion-link-details").open = true;
+        url.focus();
+        url.select();
+        status.textContent = "Der Link ist markiert. Kopiere ihn über das Auswahlmenü.";
+      }
     });
 
     sr.getElementById("install-current-btn")?.addEventListener("click", () =>

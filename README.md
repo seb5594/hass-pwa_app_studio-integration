@@ -15,6 +15,8 @@
 </p>
 <!-- header:end -->
 
+<p align="center"><img src="custom_components/pwa_app_studio/frontend/studio-logo.png" width="96" height="96" alt="PWA Web-App Studio logo"></p>
+
 **🇬🇧 English** · [🇩🇪 Deutsch](README.de.md)
 
 PWA Web-App Studio is a custom Home Assistant integration that lets administrators turn Lovelace dashboards or selected cards into installable web apps. Each app has its own URL, icon, and access settings.
@@ -33,6 +35,10 @@ The app uses the signed-in Home Assistant account. Dashboard access still depend
 The five-step designer previews the app’s launch screen and offers three motion styles. Choose **Guests on the home network** to share an app with selected local-only, non-admin Home Assistant accounts through the internal URL. The companion link opens the app in the active Home Assistant session. A standalone installation reuses the session available to its browser context and signs in through Home Assistant when needed.
 
 Minimum Home Assistant Core version: **2021.12.0**. Core versions before 2022.11 offer a button card in place of the Tile preset. Installing a PWA needs a current browser.
+
+## Open an app in the Home Assistant Companion App
+
+Sign in to the correct server in the official Home Assistant app. In the studio, save the app, open **Teilen** (Share) and choose **In Home Assistant öffnen** (Open in Home Assistant). You can also copy the Companion link and open it on the phone. It uses the account already signed in to that server. A Home Assistant dashboard button can navigate to the relative path under **Link und Dashboard-Pfad anzeigen**. Guests need a permitted local-only account and a connection to the home network. [Home Assistant Companion setup](https://companion.home-assistant.io/docs/getting_started/) · [Step-by-step instructions in German](README.de.md#in-der-companion-app-anmelden-und-die-erstellte-app-öffnen)
 
 [Architectural review (German)](docs/architekturpruefung.md)
 

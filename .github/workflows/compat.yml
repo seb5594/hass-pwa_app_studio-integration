@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: seb5594/hass-workflows
-          ref: 41c5ab57d400e2696cce740c7259dd2cfa437536
+          ref: ce7b788e9a6b5cfdc0f1a46ef09e07bd3bf7c504
           token: ${{ secrets.ORCHESTRATION_PAT || github.token }}
           path: .engine
           persist-credentials: false
@@ -44,10 +44,10 @@ jobs:
     if: needs.releases.outputs.releases != '[]'
     name: Home Assistant ${{ matrix.homeassistant }}${{ matrix.preview && ' (preview)' || '' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       # This Core version pins lru-dict 1.1.7, which predates the stricter GCC default.
       CFLAGS: ${{ matrix.homeassistant == '2022.4.7' && '-Wno-error=incompatible-pointer-types' || '' }}
-    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -59,7 +59,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: seb5594/hass-workflows
-          ref: 41c5ab57d400e2696cce740c7259dd2cfa437536
+          ref: ce7b788e9a6b5cfdc0f1a46ef09e07bd3bf7c504
           token: ${{ secrets.ORCHESTRATION_PAT || github.token }}
           path: .engine
           persist-credentials: false
@@ -80,7 +80,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: seb5594/hass-workflows
-          ref: 41c5ab57d400e2696cce740c7259dd2cfa437536
+          ref: ce7b788e9a6b5cfdc0f1a46ef09e07bd3bf7c504
           token: ${{ secrets.ORCHESTRATION_PAT || github.token }}
           path: .engine
           persist-credentials: false

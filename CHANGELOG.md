@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.11.26.3
+
+- Give the studio designer its own logo and make the Companion link easy to copy.
+- Document Companion sign-in, guest setup, and an in-app dashboard button.
+
 ## 2026.11.26.2
 
 - Support Home Assistant Core 2021.12.0 and newer, including older Python, static routes, Lovelace dashboards and icon libraries.
