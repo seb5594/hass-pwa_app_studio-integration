@@ -10,7 +10,7 @@
   const swUrl = root.dataset.swUrl;
   const clientUrl = root.dataset.clientUrl;
   const themeColor = root.dataset.theme || "#03a9f4";
-  const bgColor = root.dataset.bg || "#111827";
+  const launch = root.querySelector(".launch");
 
   const origin = window.location.origin;
   const clientId = `${origin}${clientUrl}`;
@@ -118,7 +118,8 @@
     try {
       const raw = localStorage.getItem("hassTokens");
       if (!raw) return null;
-      return JSON.parse(raw);
+      const tokens = JSON.parse(raw);
+      return tokens?.hassUrl?.replace(/\/$/, "") === origin ? tokens : null;
     } catch (_e) {
       return null;
     }
@@ -155,7 +156,8 @@
     if (!code) return null;
 
     const expectedState = sessionStorage.getItem(pkceStateKey);
-    if (expectedState && state !== expectedState) {
+    if (!expectedState || state !== expectedState) {
+      window.history.replaceState(null, "", basePath);
       throw new Error("Ungültiger OAuth-State-Parameter.");
     }
 
@@ -244,14 +246,14 @@
 
   function renderStatusCard(title, message, actionHtml = "") {
     root.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:center;height:100%;padding:24px;box-sizing:border-box;">
-        <div style="max-width:440px;width:100%;background:rgba(30,41,59,0.95);border:1px solid rgba(255,255,255,0.14);border-radius:18px;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,0.45);text-align:center;">
-          <img src="${basePath}icon-192.png" alt="" style="width:72px;height:72px;border-radius:16px;margin-bottom:14px;" />
-          <h2 style="margin:0 0 8px;font-size:20px;">${esc(title)}</h2>
-          <p style="margin:0 0 18px;font-size:14px;line-height:1.5;color:#cbd5e1;">${message}</p>
+      <main class="launch">
+        <div class="welcome">
+          <div class="mark"><img src="${basePath}icon-192.png" alt="" width="76" height="76" /></div>
+          <h1>${esc(title)}</h1>
+          <p role="status">${message}</p>
           ${actionHtml}
         </div>
-      </div>
+      </main>
     `;
   }
 
@@ -297,8 +299,7 @@
     });
   }
 
-  await registerServiceWorker();
-  renderStatusCard(appName, "Authentifizierung und Berechtigungen werden geprüft...");
+  void registerServiceWorker();
 
   try {
     let tokens = await ensureAuthenticatedTokens();
@@ -327,10 +328,9 @@
       renderStatusCard(
         "Zugriff verweigert",
         `${esc(errJson.message || "Keine Berechtigung für diese App.")}<br/><small>Angemeldet als: ${esc(errJson?.user?.name || "Unbekannt")}</small>`,
-        `<button id="relogin-btn" style="background:${themeColor};color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:600;cursor:pointer;">Mit anderem Konto anmelden</button>`
+        `<button id="relogin-btn">Mit anderem Konto anmelden</button>`
       );
       document.getElementById("relogin-btn")?.addEventListener("click", async () => {
-        localStorage.removeItem("hassTokens");
         await startOAuthFlow();
       });
       return;
@@ -340,21 +340,32 @@
       throw new Error(`HTTP ${runtimeResp.status}`);
     }
 
-    root.innerHTML = "";
+    document.getElementById("launch-status").textContent = "Deine Ansicht wird geladen …";
     renderInstallBannerIfWanted();
 
     const frame = document.createElement("iframe");
     frame.src = `/pwa-app-studio-runner?app=${encodeURIComponent(slug)}&pwa_shell=1`;
-    frame.style.cssText = `
-      border:0;width:100%;flex:1;height:100%;background:${bgColor};display:block;
-    `;
+    frame.title = appName;
+    frame.inert = true;
+    const reveal = () => {
+      clearTimeout(timer);
+      window.removeEventListener("message", ready);
+      frame.inert = false;
+      launch?.remove();
+    };
+    const ready = (event) => {
+      if (event.origin === origin && event.source === frame.contentWindow &&
+          event.data?.type === "pwa-app-studio:ready" && event.data.slug === slug) reveal();
+    };
+    const timer = setTimeout(reveal, 12000);
+    window.addEventListener("message", ready);
     frame.allow = "fullscreen";
     root.appendChild(frame);
   } catch (err) {
     renderStatusCard(
       "Verbindungsfehler",
       `Die PWA konnte nicht gestartet werden (${esc(err?.message || err)}).`,
-      `<button onclick="window.location.reload()" style="background:${themeColor};color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:600;cursor:pointer;">Erneut versuchen</button>`
+      `<button onclick="window.location.reload()">Erneut versuchen</button>`
     );
   }
 })();

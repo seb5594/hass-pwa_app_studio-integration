@@ -1,5 +1,15 @@
 /* Admin-only PWA Web-App Studio Designer custom panel with Live Device Preview, Multi-Card Composer, Icon Studio & QR Distribution. */
 
+import { loadPwaCardHelpers } from "./pwa-card-helpers.js";
+
+const STEPS = [
+  { id: "general", label: "App", icon: "creation-outline", title: "Wie heißt deine App?", hint: "Wähle einen Namen, eine Farbe und den ersten Eindruck beim Öffnen." },
+  { id: "content", label: "Inhalt", icon: "view-dashboard-outline", title: "Was soll deine App zeigen?", hint: "Übernimm ein Dashboard oder stelle einzelne Karten zusammen." },
+  { id: "icon", label: "Symbol", icon: "shape-outline", title: "Woran erkennst du deine App?", hint: "Dieses Symbol erscheint auf dem Startbildschirm." },
+  { id: "access", label: "Zugriff", icon: "account-key-outline", title: "Wer darf die App öffnen?", hint: "Wähle die Personen aus, für die deine App gedacht ist." },
+  { id: "distribute", label: "Teilen", icon: "qrcode-scan", title: "Wie kommt die App aufs Handy?", hint: "Speichere deine Auswahl und öffne die App oder teile den QR-Code." },
+];
+
 const CARD_PRESETS = {
   tile: {
     label: "Tile-Karte",
@@ -254,6 +264,9 @@ class PwaAppStudioPanel extends HTMLElement {
   }
 
   _newAppDraft() {
+    this._activeTab = "general";
+    this._statusMsg = "";
+    this._errorMsg = "";
     this._mobilePane = "editor";
     this._selectedAppId = null;
     this._draft = this._createEmptyDraft();
@@ -323,8 +336,21 @@ class PwaAppStudioPanel extends HTMLElement {
     icon.badge_svg_path = await this._extractMdiSvgPath(icon.badge_icon);
   }
 
+  _updateSampleIcon(sample) {
+    const mark = sample?.shadowRoot?.querySelector(".mark");
+    if (!mark) return;
+    let img = mark.querySelector("img");
+    if (!img) {
+      img = new Image(76, 76);
+      img.alt = "";
+      mark.replaceChildren(img);
+    }
+    img.src = this._iconPreviewUrl;
+  }
+
   async _refreshIconPreview() {
     if (!this._hass || !this._draft) return;
+    const requestId = this._iconRequestId = (this._iconRequestId || 0) + 1;
     await this._syncIconPathsBeforePreviewOrSave();
     try {
       const token = this._hass.auth?.data?.access_token;
@@ -338,17 +364,22 @@ class PwaAppStudioPanel extends HTMLElement {
       });
       if (!resp.ok) return;
       const blob = await resp.blob();
+      if (requestId !== this._iconRequestId) return;
       if (this._iconPreviewUrl) URL.revokeObjectURL(this._iconPreviewUrl);
       this._iconPreviewUrl = URL.createObjectURL(blob);
       const img = this.shadowRoot.getElementById("live-icon-img");
       if (img) img.src = this._iconPreviewUrl;
+      this._updateSampleIcon(this.shadowRoot.getElementById("launch-sample"));
     } catch (_e) {
       // Ignore preview errors
     }
   }
 
   async _saveApp() {
-    if (!this._hass || !this._draft) return;
+    if (!this._hass || !this._draft || this._saving) return;
+    this._saving = true;
+    const draft = this._draft;
+    const selectedId = this._selectedAppId;
     this._statusMsg = "Speichere PWA...";
     this._errorMsg = "";
     this._render();
@@ -356,28 +387,32 @@ class PwaAppStudioPanel extends HTMLElement {
     try {
       await this._syncIconPathsBeforePreviewOrSave();
       let saved;
-      if (this._selectedAppId) {
+      if (selectedId) {
         const res = await this._hass.callWS({
           type: "pwa_app_studio/apps/update",
-          app_id: this._selectedAppId,
-          payload: this._draft,
+          app_id: selectedId,
+          payload: draft,
         });
         saved = res.app;
       } else {
         const res = await this._hass.callWS({
           type: "pwa_app_studio/apps/create",
-          payload: this._draft,
+          payload: draft,
         });
         saved = res.app;
       }
       const appsRes = await this._hass.callWS({ type: "pwa_app_studio/apps/list" });
       this._apps = appsRes.apps || [];
+      if (this._draft !== draft) return;
       this._statusMsg = `PWA '${saved.manifest.name}' gespeichert (v${saved.version}).`;
       this._selectApp(saved.app_id);
     } catch (err) {
+      if (this._draft !== draft) return;
       this._errorMsg = err?.message || "Speichern fehlgeschlagen.";
       this._statusMsg = "";
       this._render();
+    } finally {
+      this._saving = false;
     }
   }
 
@@ -402,15 +437,19 @@ class PwaAppStudioPanel extends HTMLElement {
 
   async _loadQrCode() {
     if (!this._hass || !this._selectedAppId) return;
+    const appId = this._selectedAppId;
     try {
       const info = await this._hass.callWS({
         type: "pwa_app_studio/qr/generate",
         app_id: this._selectedAppId,
         origin: window.location.origin,
       });
+      if (appId !== this._selectedAppId) return;
       this._qrInfo = info;
       this._render();
     } catch (err) {
+      if (appId !== this._selectedAppId) return;
+      this._qrInfo = null;
       this._errorMsg = err?.message || "QR-Code konnte nicht generiert werden.";
       this._render();
     }
@@ -422,12 +461,17 @@ class PwaAppStudioPanel extends HTMLElement {
     stage.innerHTML = "";
     this._previewCardElements = [];
 
-    if (!window.loadCardHelpers) {
-      stage.innerHTML = `<div class="preview-empty">Lovelace Card Helpers nicht verfügbar.</div>`;
+    let helpers;
+    try {
+      helpers = await loadPwaCardHelpers(this._hass);
+    } catch (err) {
+      const message = document.createElement("div");
+      message.className = "preview-empty";
+      message.textContent = err?.message || "Die Kartenvorschau ist gerade nicht verfügbar.";
+      stage.appendChild(message);
       return;
     }
-
-    const helpers = await window.loadCardHelpers();
+    if (!stage.isConnected) return;
     const content = this._draft.content;
     let items = [];
 
@@ -439,7 +483,7 @@ class PwaAppStudioPanel extends HTMLElement {
       const view =
         (content.view_path
           ? views.find((v) => String(v.path) === String(content.view_path))
-          : views[0]) || views[0];
+          : views[0]);
       items = (view?.cards || []).map((cfg, idx) => ({
         id: `dash-${idx}`,
         col_span: 1,
@@ -524,7 +568,7 @@ class PwaAppStudioPanel extends HTMLElement {
     const view =
       (this._draft.content.view_path
         ? views.find((v) => String(v.path) === String(this._draft.content.view_path))
-        : views[0]) || views[0];
+        : views[0]);
     const cards = view?.cards || [];
     if (!cards.length) {
       this._errorMsg = "Die ausgewählte View enthält keine direkt importierbaren Karten.";
@@ -552,7 +596,9 @@ class PwaAppStudioPanel extends HTMLElement {
       this._render();
       return;
     }
-    const url = `${window.location.origin}/pwa_app_studio/app/${this._draft.slug}/?auto_install=1`;
+    if (!this._qrInfo?.launch_url) return;
+    const url = new URL(this._qrInfo.launch_url, location.origin);
+    url.searchParams.set("auto_install", "1");
     window.open(url, "_blank", "noopener");
   }
 
@@ -566,6 +612,8 @@ class PwaAppStudioPanel extends HTMLElement {
     }
 
     const d = this._draft;
+    const index = STEPS.findIndex(step => step.id === this._activeTab);
+    const step = STEPS[index];
     const detected = this._detectCurrentDevice();
     const dimBase = DEVICE_DIMENSIONS[this._previewDevice] || DEVICE_DIMENSIONS.smartphone;
     const frameW =
@@ -839,7 +887,12 @@ class PwaAppStudioPanel extends HTMLElement {
         :host {height:100dvh;max-height:100%;min-height:0;--studio-accent:var(--accent-color,var(--primary-color,#03a9f4));}
         .mobile-nav {display:none}
         .topbar {background:var(--card-background-color);color:var(--primary-text-color)}
-        .topbar button,.tabs button,.device-toolbar button {min-height:44px;white-space:nowrap;border-radius:22px}
+        .topbar button,.step-actions button { font-size:.875rem; }
+        .btn.primary,.tab.active { background:color-mix(in srgb,var(--studio-accent) 56%,#111827); color:white; }
+        @supports (color:contrast-color(red)) {
+          .btn.primary,.tab.active { background:var(--studio-accent); color:contrast-color(var(--studio-accent)); }
+        }
+        .topbar button,.device-toolbar button {min-height:44px;white-space:nowrap;border-radius:22px}
         .card-box {border-radius:20px;padding:clamp(14px,2vw,24px)}
         button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible {outline:3px solid var(--studio-accent);outline-offset:2px}
         .device-bezel-wrap {position:relative;overflow:hidden;flex:none}
@@ -863,6 +916,30 @@ class PwaAppStudioPanel extends HTMLElement {
           input:not([type=checkbox]),select,textarea {font-size:16px;min-height:44px}
           .preview-pane > * {margin-bottom:12px}
         }
+        .step-nav { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:3px; margin-bottom:16px; }
+        .step-nav button { display:grid; justify-items:center; gap:4px; background:transparent; color:inherit; border:0; border-radius:14px; padding:8px 0; min-height:50px; font:inherit; font-size:.8rem; cursor:pointer; }
+        .step-nav [aria-current] { background:color-mix(in srgb,var(--studio-accent) 19%,var(--card-background-color,#1e293b)); font-weight:700; }
+        .step-nav [aria-current] ha-icon { color:var(--primary-text-color); }
+        .step-header { position:relative; isolation:isolate; overflow:hidden; padding:clamp(18px,3vw,32px); margin-bottom:16px; border-radius:24px;
+          background:linear-gradient(115deg,color-mix(in srgb,var(--studio-accent) 18%,var(--card-background-color,#1e293b)),var(--card-background-color,#1e293b)); }
+        .step-header::after { content:""; position:absolute; z-index:-1; right:-74px; top:-94px; width:160px; height:160px; border-radius:50%;
+          border:18px solid color-mix(in srgb,var(--studio-accent) 9%,transparent); outline:1px solid color-mix(in srgb,var(--studio-accent) 22%,transparent); }
+        .step-header > span { font-size:.8rem; font-weight:650; }
+        .step-header h1 { margin:.4rem 0; line-height:1.13; font-size:clamp(1.55rem,3vw,2.1rem); letter-spacing:-.035em; }
+        .step-header p,.guest-note p { margin:0; line-height:1.55; }
+        .step-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; padding:4px 0 16px; }
+        .step-actions button,summary,.access-user { min-height:44px; }
+        .step-actions button { border-radius:24px; }
+        details { margin-top:16px; border-top:1px solid var(--divider-color,#8885); }
+        summary { padding:12px 0; cursor:pointer; font-weight:600; }
+        #launch-sample { position:relative; height:17rem; overflow:hidden; border-radius:18px; }
+        .card-box svg { max-width:100%; height:auto; }
+        .guest-note { margin:14px 0; padding:16px; border-radius:16px; background:color-mix(in srgb,var(--studio-accent) 10%,var(--card-background-color,#1e293b)); }
+        .guest-note button { min-height:44px; margin:4px 0; }
+        .guest-note a { color:inherit; text-underline-offset:3px; }
+        .companion-link { display:inline-flex; align-items:center; min-height:44px; text-decoration:none; }
+        .access-user { display:flex; align-items:center; gap:10px; }
+        .editor-pane input,.editor-pane select { min-width:0; }
       </style>
 
       <div class="topbar">
@@ -901,18 +978,26 @@ class PwaAppStudioPanel extends HTMLElement {
         </aside>
 
         <section class="editor-pane">
-          ${this._statusMsg ? `<div class="banner-ok">${this._esc(this._statusMsg)}</div>` : ""}
-          ${this._errorMsg ? `<div class="banner-err">${this._esc(this._errorMsg)}</div>` : ""}
+          ${this._statusMsg ? `<div class="banner-ok" role="status">${this._esc(this._statusMsg)}</div>` : ""}
+          ${this._errorMsg ? `<div class="banner-err" role="alert">${this._esc(this._errorMsg)}</div>` : ""}
 
-          <div class="tabs">
-            <button class="tab ${this._activeTab === "general" ? "active" : ""}" data-tab="general">App</button>
-            <button class="tab ${this._activeTab === "content" ? "active" : ""}" data-tab="content">Inhalt</button>
-            <button class="tab ${this._activeTab === "icon" ? "active" : ""}" data-tab="icon">Icon</button>
-            <button class="tab ${this._activeTab === "access" ? "active" : ""}" data-tab="access">Freigabe</button>
-            <button class="tab ${this._activeTab === "distribute" ? "active" : ""}" data-tab="distribute">Installation</button>
-          </div>
-
+          <nav class="step-nav" aria-label="Einrichtungsschritte">
+            ${STEPS.map((item, i) => `<button data-tab="${item.id}" aria-label="Schritt ${i + 1}: ${item.label}" ${item === step ? 'aria-current="step"' : ""}>
+              <ha-icon icon="mdi:${item.icon}" aria-hidden="true"></ha-icon><span>${item.label}</span>
+            </button>`).join("")}
+          </nav>
+          <header class="step-header">
+            <span>Schritt ${index + 1} von ${STEPS.length}</span>
+            <h1 id="step-title" tabindex="-1">${step.title}</h1>
+            <p>${step.hint}</p>
+          </header>
           ${this._renderActiveTabHtml(d, dashViews, detected)}
+          <div class="step-actions">
+            ${index ? `<button class="btn" data-tab="${STEPS[index - 1].id}">Zurück</button>` : ""}
+            ${index + 1 < STEPS.length
+              ? `<button class="btn primary" data-tab="${STEPS[index + 1].id}">Weiter zu ${STEPS[index + 1].label} →</button>`
+              : `<button class="btn primary" id="finish-btn">App speichern</button>`}
+          </div>
         </section>
 
         <aside class="preview-pane">
@@ -972,6 +1057,27 @@ class PwaAppStudioPanel extends HTMLElement {
             <label>Kurzname (Homescreen)
               <input id="f-short-name" value="${this._esc(d.manifest.short_name)}" />
             </label>
+            <label>Akzentfarbe
+              <input type="color" id="f-theme" value="${this._esc(d.manifest.theme_color)}" />
+            </label>
+            <label>Hintergrundfarbe
+              <input type="color" id="f-bg" value="${this._esc(d.manifest.background_color)}" />
+            </label>
+          </div>
+          <label style="margin-top:10px;">Beschreibung
+            <input id="f-desc" value="${this._esc(d.manifest.description)}" />
+          </label>
+          <label style="margin-top:12px">Animation beim Öffnen
+            <select id="f-launch">
+              ${[["ripple","Sanfte Wellen"],["glow","Leuchtschein"],["still","Ruhiges Standbild"]].map(([key,title]) =>
+                `<option value="${key}" ${(d.manifest.launch_style || "ripple") === key ? "selected" : ""}>${title}</option>`).join("")}
+            </select>
+          </label>
+          <details class="launch-preview"><summary>Startanimation ansehen</summary>
+            <div id="launch-sample"></div>
+          </details>
+          <details><summary>Weitere Einstellungen</summary>
+          <div class="field-grid">
             <label>URL-Slug (optional)
               <input id="f-slug" placeholder="automatisch" value="${this._esc(d.slug)}" />
             </label>
@@ -1004,21 +1110,12 @@ class PwaAppStudioPanel extends HTMLElement {
                 </select>
               </div>
             </label>
-            <label>Theme-Farbe
-              <input type="color" id="f-theme" value="${this._esc(d.manifest.theme_color)}" />
-            </label>
-            <label>Hintergrundfarbe
-              <input type="color" id="f-bg" value="${this._esc(d.manifest.background_color)}" />
-            </label>
           </div>
-          <label style="margin-top:10px;">Beschreibung
-            <input id="f-desc" value="${this._esc(d.manifest.description)}" />
-          </label>
           <div class="field-grid" style="margin-top:12px;">
-            <label class="inline"><input type="checkbox" id="f-offline" ${d.manifest.offline_enabled ? "checked" : ""} /> Offline-App-Shell-Caching aktiv</label>
+            <label class="inline"><input type="checkbox" id="f-offline" ${d.manifest.offline_enabled ? "checked" : ""} /> Startbildschirm offline verfügbar machen</label>
             <label class="inline"><input type="checkbox" id="f-hide-hdr" ${d.manifest.hide_ha_header ? "checked" : ""} /> PWA-Header ausblenden</label>
             <label class="inline"><input type="checkbox" id="f-kiosk" ${d.manifest.kiosk_mode ? "checked" : ""} /> Kiosk-Vollmodus</label>
-          </div>
+          </div></details>
         </div>
       `;
     }
@@ -1041,8 +1138,8 @@ class PwaAppStudioPanel extends HTMLElement {
           <div class="field-grid">
             <label>Inhaltsquelle
               <select id="c-source-mode">
-                <option value="lovelace_dashboard" ${d.content.source_mode === "lovelace_dashboard" ? "selected" : ""}>Explizites Lovelace Dashboard</option>
-                <option value="lovelace_cards" ${d.content.source_mode === "lovelace_cards" ? "selected" : ""}>Individuelle Lovelace Karten (kombinier- & sortierbar)</option>
+                <option value="lovelace_dashboard" ${d.content.source_mode === "lovelace_dashboard" ? "selected" : ""}>Ein vorhandenes Dashboard</option>
+                <option value="lovelace_cards" ${d.content.source_mode === "lovelace_cards" ? "selected" : ""}>Einzelne Karten zusammenstellen</option>
               </select>
             </label>
             <label>Layout-Modus
@@ -1226,30 +1323,29 @@ class PwaAppStudioPanel extends HTMLElement {
     }
 
     if (this._activeTab === "access") {
+      const mode = d.access.require_admin ? "admin" : d.access.local_guests ? "guest"
+        : d.access.allow_all_authenticated ? "all" : "selected";
+      const selectable = this._users.filter(u => !u.is_admin && (mode !== "guest" || u.local_only));
       return `
         <div class="card-box">
-          <label class="inline">
-            <input type="checkbox" id="a-admin-only" ${d.access.require_admin ? "checked" : ""} />
-            Nur für Administratoren freigeben
+          <label>Freigabe für diese App
+            <select id="access-mode">
+              ${[["all","Alle angemeldeten Personen"],["selected","Ausgewählte Personen"],["guest","🏡 Gäste im Heimnetz"],["admin","Nur Administratoren"]].map(([key,title]) =>
+                `<option value="${key}" ${mode === key ? "selected" : ""}>${title}</option>`).join("")}
+            </select>
           </label>
-          <label class="inline" style="margin-top:10px;">
-            <input type="checkbox" id="a-all-users" ${d.access.allow_all_authenticated ? "checked" : ""} />
-            Alle registrierten & angemeldeten Benutzer zulassen
-          </label>
-          <div style="margin-top:14px;opacity:${d.access.allow_all_authenticated || d.access.require_admin ? "0.5" : "1"};">
-            <strong style="font-size:13px;">Explizit berechtigte registrierte Benutzer (für QR-Scan & Login)</strong>
-            <div style="display:grid;gap:8px;margin-top:8px;">
-              ${this._users
-                .map(
-                  (u) => `
-                <label class="inline">
-                  <input type="checkbox" class="a-user-cb" value="${this._esc(u.id)}" ${d.access.allowed_user_ids.includes(u.id) ? "checked" : ""} />
-                  ${this._esc(u.name)} ${u.is_admin ? "(Admin)" : "(Benutzer)"}
-                </label>`
-                )
-                .join("")}
-            </div>
-          </div>
+          ${mode === "guest" ? `<div class="guest-note"><p><strong>Gäste einrichten</strong></p>
+            <ol><li>Erstelle für deinen Gast ein Konto ohne Administratorrechte. Aktiviere „Nur lokaler Zugriff“.</li>
+            <li>Wähle das Konto hier aus und speichere die App.</li>
+            <li>Verbinde das Handy mit deinem WLAN. Öffne den QR-Code über die lokale Adresse und melde dich mit dem Gastkonto an.</li></ol>
+            <a href="/config/users" target="_blank" rel="noopener">Benutzerverwaltung öffnen ↗</a>
+            <button type="button" class="btn" id="reload-users">Konten neu laden</button>
+            <p>Das Konto behält seine übrigen Home-Assistant-Rechte.</p></div>` : ""}
+          ${mode === "selected" || mode === "guest" ? `<fieldset><legend>Konten auswählen</legend>
+            ${selectable.map(u => `<label class="access-user"><input type="checkbox" class="a-user-cb" value="${this._esc(u.id)}"
+                ${d.access.allowed_user_ids.includes(u.id) ? "checked" : ""} />${this._esc(u.name)}</label>`).join("") || "<p>Kein passendes Konto vorhanden.</p>"}
+            </fieldset>` : ""}
+          <p>Administratoren können die App jederzeit öffnen.</p>
         </div>
       `;
     }
@@ -1258,11 +1354,12 @@ class PwaAppStudioPanel extends HTMLElement {
       <div class="card-box">
         <strong>Installation auf diesem Gerät</strong>
         <p style="font-size:13px;opacity:0.85;">
-          Dynamisch erkanntes Endgerät: <b>${this._esc(detected.osLabel)}</b>
-          ${detected.hasNativePrompt ? " (Nativer Browser-Installationsdialog unterstützt)" : " (Geführte Safari/System-Installation)"}
+          Dein Gerät: <b>${this._esc(detected.osLabel)}</b>
         </p>
         <div style="display:flex;flex-wrap:wrap;gap:10px;">
-          <button class="btn primary" id="install-current-btn">Install on current device (${this._esc(detected.osLabel)})</button>
+          <button class="btn primary" id="install-current-btn" ${this._qrInfo ? "" : "disabled"}>Auf diesem Gerät installieren</button>
+          ${this._qrInfo?.companion_url ? `<a class="btn companion-link" href="${this._esc(this._qrInfo.companion_url)}">In Home Assistant öffnen ↗</a>` : ""}
+
           ${
             this._selectedAppId
               ? `<button class="btn" id="refresh-qr-btn">QR-Code aktualisieren</button>`
@@ -1277,7 +1374,7 @@ class PwaAppStudioPanel extends HTMLElement {
           !this._selectedAppId
             ? `<p style="font-size:13px;opacity:0.75;">Bitte speichere die App zunächst über "Speichern", um einen QR-Code zu erzeugen.</p>`
             : !this._qrInfo
-            ? `<p style="font-size:13px;opacity:0.75;">Lade QR-Code...</p>`
+            ? `<p style="font-size:13px;opacity:0.75;">${this._errorMsg ? "QR-Code aktuell nicht verfügbar." : "QR-Code wird geladen …"}</p>`
             : `
           <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;margin-top:12px;">
             <div style="background:#ffffff;padding:12px;border-radius:12px;width:210px;height:210px;display:flex;align-items:center;justify-content:center;">
@@ -1304,6 +1401,25 @@ class PwaAppStudioPanel extends HTMLElement {
 
   _bindEvents() {
     const sr = this.shadowRoot;
+    const sample = sr.getElementById("launch-sample");
+    if (sample) {
+      const shadow = sample.attachShadow({ mode: "open" });
+      shadow.innerHTML = `<link rel="stylesheet" href="/pwa_app_studio_static/pwa-shell.css">
+        <div class="launch" aria-hidden="true" style="color:white">
+          <div class="welcome"><div class="mark"><span style="font-size:48px">⌂</span></div>
+          <h1></h1><p>Deine App wird geöffnet …</p></div></div>`;
+      const updateSample = () => {
+        const manifest = this._draft.manifest;
+        sample.style.setProperty("--app-accent", manifest.theme_color);
+        sample.style.setProperty("--app-bg", manifest.background_color);
+        shadow.querySelector(".launch").dataset.style = manifest.launch_style || "ripple";
+        shadow.querySelector("h1").textContent = manifest.name;
+        if (this._iconPreviewUrl) this._updateSampleIcon(sample);
+      };
+      sr.querySelector(".launch-preview").ontoggle = updateSample;
+      sr.querySelector(".editor-pane").addEventListener("input", updateSample);
+      updateSample();
+    }
     for (const button of sr.querySelectorAll("[data-pane-target]")) {
       button.onclick = () => {
         this._mobilePane = button.dataset.paneTarget;
@@ -1317,6 +1433,7 @@ class PwaAppStudioPanel extends HTMLElement {
       this.dispatchEvent(new CustomEvent("hass-toggle-menu", { bubbles: true, composed: true }));
     });
     sr.getElementById("new-app-btn")?.addEventListener("click", () => this._newAppDraft());
+    sr.getElementById("finish-btn")?.addEventListener("click", () => this._saveApp());
     sr.getElementById("save-app-btn")?.addEventListener("click", () => this._saveApp());
 
     sr.querySelectorAll(".app-item").forEach((el) => {
@@ -1332,10 +1449,12 @@ class PwaAppStudioPanel extends HTMLElement {
       });
     });
 
-    sr.querySelectorAll(".tab[data-tab]").forEach((btn) => {
+    sr.querySelectorAll("button[data-tab]").forEach((btn) => {
       btn.addEventListener("click", () => {
         this._activeTab = btn.dataset.tab;
         this._render();
+        sr.querySelector(".editor-pane").scrollTop = 0;
+        sr.getElementById("step-title").focus({ preventScroll: true });
         this._renderDevicePreviewCards();
         if (this._activeTab === "icon") this._refreshIconPreview();
         if (this._activeTab === "distribute" && this._selectedAppId) this._loadQrCode();
@@ -1378,6 +1497,7 @@ class PwaAppStudioPanel extends HTMLElement {
     bindVal("f-name", (v) => (this._draft.manifest.name = v));
     bindVal("f-short-name", (v) => (this._draft.manifest.short_name = v));
     bindVal("f-slug", (v) => (this._draft.slug = v));
+    bindVal("f-launch", (v) => (this._draft.manifest.launch_style = v));
     bindVal("f-display", (v) => (this._draft.manifest.display = v));
     bindVal("f-orientation", (v) => (this._draft.manifest.orientation = v));
     bindVal("f-lang", (v) => (this._draft.manifest.lang = v));
@@ -1537,13 +1657,26 @@ class PwaAppStudioPanel extends HTMLElement {
       reader.readAsDataURL(file);
     });
 
-    bindChk("a-admin-only", (v) => {
-      this._draft.access.require_admin = v;
+    bindVal("access-mode", mode => {
+      Object.assign(this._draft.access, {
+        local_guests: mode === "guest",
+        require_admin: mode === "admin",
+        allow_all_authenticated: mode === "all",
+        allowed_user_ids: [],
+      });
       this._render();
+      this._renderDevicePreviewCards();
+      sr.getElementById("access-mode").focus();
     });
-    bindChk("a-all-users", (v) => {
-      this._draft.access.allow_all_authenticated = v;
+    sr.getElementById("reload-users")?.addEventListener("click", async () => {
+      try {
+        const result = await this._hass.callWS({ type: "pwa_app_studio/users/list" });
+        this._users = result.users || [];
+      } catch (err) {
+        this._errorMsg = err?.message || "Konten konnten nicht geladen werden.";
+      }
       this._render();
+      this._renderDevicePreviewCards();
     });
     sr.querySelectorAll(".a-user-cb").forEach((cb) => {
       cb.addEventListener("change", () => {

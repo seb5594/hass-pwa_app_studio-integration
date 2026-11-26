@@ -6,6 +6,8 @@ locally: python .engine/.scripts/ha_matrix.py run 2026.9.4
 """
 
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -42,3 +44,69 @@ async def test_entry_loads_and_unloads(hass):
     assert entry.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+@pytest.fixture
+async def studio(hass):
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    return hass.data[DOMAIN]["runtime"].app_service
+
+
+async def test_guest_runtime_requires_selected_active_local_account(studio):
+    from custom_components.pwa_app_studio.presentation.http_views import PwaRuntimeApiView
+
+    app = await studio.async_create_app({
+        "slug": "terrasse",
+        "access": {"local_guests": True, "allowed_user_ids": ["gast"]},
+    })
+    view = PwaRuntimeApiView(studio)
+    for user_id, local_only, active, admin, expected in [
+        ("gast", True, True, False, 200),
+        ("gast", False, True, False, 403),
+        ("gast", True, False, False, 403),
+        ("fremd", True, True, False, 403),
+        ("verwaltung", False, True, True, 200),
+    ]:
+        user = SimpleNamespace(
+            id=user_id, name=user_id, local_only=local_only, is_active=active, is_admin=admin,
+        )
+        response = await view.get({"hass_user": user}, app.slug)
+        assert response.status == expected
+
+
+async def test_failed_storage_does_not_change_live_app(studio, monkeypatch):
+    app = await studio.async_create_app({"slug": "garten"})
+    original = app.to_dict()
+    monkeypatch.setattr(studio._repository, "async_save_all", AsyncMock(side_effect=OSError))
+    with pytest.raises(OSError):
+        await studio.async_update_app(app.app_id, {"slug": "neuer-garten"})
+    with pytest.raises(OSError):
+        await studio.async_delete_app(app.app_id)
+    with pytest.raises(OSError):
+        await studio.async_create_app({"slug": "haus"})
+    assert [a.to_dict() for a in studio.list_apps()] == [original]
+
+
+async def test_shell_launch_settings_and_footer(studio):
+    from custom_components.pwa_app_studio.const import VERSION
+    from custom_components.pwa_app_studio.domain.models import PwaApp
+    from custom_components.pwa_app_studio.presentation.http_views import PwaAppShellView
+
+    app = await studio.async_create_app({"manifest": {"name": "Küche & Garten"}})
+    legacy = app.to_dict()
+    del legacy["manifest"]["launch_style"]
+    del legacy["access"]["local_guests"]
+    restored = PwaApp.from_dict(legacy)
+    assert restored.manifest.launch_style == "ripple"
+    assert not restored.access.local_guests
+    app = await studio.async_update_app(app.app_id, {"manifest": {
+        "name": "Küche & Garten", "launch_style": "still",
+    }})
+    shell = (await PwaAppShellView(studio).get({}, app.slug)).text
+    assert 'data-style="still"' in shell
+    assert "Küche &amp; Garten" in shell
+    assert f"App {VERSION} developed by seb5594 (Sebastian Schmidt)" in shell
+    assert "Made with ❤️ in Germany 🇩🇪" in shell
+    assert 'href="https://github.com/seb5594"' in shell
+    assert "user-scalable=no" not in shell

@@ -120,6 +120,7 @@ class HaUserDirectoryAdapter:
                     "id": user.id,
                     "name": user.name or "Unbenannter Benutzer",
                     "is_admin": bool(user.is_admin),
+                    "local_only": user.local_only,
                     "is_owner": bool(user.is_owner),
                 }
             )

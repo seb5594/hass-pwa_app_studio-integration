@@ -42,7 +42,7 @@ class PwaAppShellView(HomeAssistantView):
 <html lang="{html.escape(app.manifest.lang)}" dir="{html.escape(app.manifest.text_dir)}">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>{escaped_name}</title>
   <meta name="theme-color" content="{escaped_theme}" />
   <meta name="background-color" content="{escaped_bg}" />
@@ -53,24 +53,8 @@ class PwaAppShellView(HomeAssistantView):
   <link rel="icon" type="image/png" sizes="192x192" href="{base}/icon-192.png?v={ver}" />
   <link rel="apple-touch-icon" sizes="180x180" href="{base}/icon-180.png?v={ver}" />
   <link rel="manifest" href="{base}/manifest.webmanifest?v={ver}" />
-  <style>
-    html, body {{
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      background: {escaped_bg};
-      color: #f8fafc;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      overflow: hidden;
-    }}
-    #pwa-root {{
-      width: 100%;
-      height: 100dvh;
-      display: flex;
-      flex-direction: column;
-    }}
-  </style>
+  <link rel="stylesheet" href="{STATIC_URL_PATH}/pwa-shell.css?v={VERSION}" />
+  <style>:root {{ --app-accent: {escaped_theme}; --app-bg: {escaped_bg}; }}</style>
 </head>
 <body>
   <div id="pwa-root"
@@ -81,7 +65,17 @@ class PwaAppShellView(HomeAssistantView):
        data-client-url="{base}/client"
        data-theme="{escaped_theme}"
        data-bg="{escaped_bg}">
+    <main class="launch" data-style="{app.manifest.launch_style}">
+      <div class="welcome">
+        <div class="mark"><img src="{base}/icon-192.png?v={ver}" width="76" height="76" alt="" /></div>
+        <h1>{escaped_name}</h1>
+        <p role="status" id="launch-status">Deine App wird geöffnet …</p>
+      </div>
+    </main>
   </div>
+  <footer><a href="https://github.com/seb5594" target="_blank" rel="noopener noreferrer">
+    App {html.escape(VERSION)} developed by seb5594 (Sebastian Schmidt)<br />
+    Made with ❤️ in Germany 🇩🇪</a></footer>
   <script type="module" src="{STATIC_URL_PATH}/pwa-runtime.js?v={VERSION}"></script>
 </body>
 </html>
@@ -134,12 +128,13 @@ class PwaServiceWorkerView(HomeAssistantView):
             return web.Response(status=404, text="Service worker not found")
 
         base = f"{HTTP_BASE_PATH}/app/{app.slug}"
-        cache_name = f"pwa-app-studio-{app.slug}-v{app.version}"
+        cache_name = f"pwa-app-studio:{app.slug}:{VERSION}:{app.version}"
         precache_urls = json.dumps(
             [
                 f"{base}/",
                 f"{base}/icon-192.png?v={app.version}",
                 f"{base}/icon-512.png?v={app.version}",
+                f"{STATIC_URL_PATH}/pwa-shell.css?v={VERSION}",
                 f"{STATIC_URL_PATH}/pwa-runtime.js?v={VERSION}",
             ]
         )
@@ -163,7 +158,8 @@ self.addEventListener("activate", (event) => {{
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((key) => key.startsWith("pwa-app-studio-{app.slug}-") && key !== CACHE_NAME)
+          .filter((key) => (key.startsWith("pwa-app-studio:{app.slug}:") && key !== CACHE_NAME)
+            || /^pwa-app-studio-{app.slug}-v[0-9]+$/.test(key))
           .map((key) => caches.delete(key))
       )
     ).then(() => self.clients.claim())
@@ -174,22 +170,24 @@ self.addEventListener("fetch", (event) => {{
   const req = event.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
-  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/auth/")) {{
-    return;
-  }}
-  if (!OFFLINE_ENABLED) return;
-  event.respondWith(
-    fetch(req)
-      .then((res) => {{
-        const hasOAuthParams = url.searchParams.has("code") || url.searchParams.has("state");
-        if (res && res.status === 200 && url.origin === self.location.origin && !hasOAuthParams) {{
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
-        }}
-        return res;
-      }})
-      .catch(() => caches.match(req))
-  );
+  if (!OFFLINE_ENABLED || url.origin !== self.location.origin ||
+      !PRECACHE_ASSETS.includes(url.pathname + url.search)) return;
+
+  event.respondWith((async () => {{
+    let response;
+    try {{
+      response = await fetch(req);
+    }} catch (error) {{
+      const cached = await (await caches.open(CACHE_NAME)).match(req);
+      if (cached) return cached;
+      throw error;
+    }}
+    if (response.ok && !response.redirected) {{
+      const copy = response.clone();
+      event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)));
+    }}
+    return response;
+  }})());
 }});
 """
         return web.Response(
@@ -312,7 +310,7 @@ class PwaRuntimeApiView(HomeAssistantView):
 
         user = request["hass_user"]
         if not user.is_active or not self._app_service.can_user_access(
-            app, user.id, user.is_admin
+            app, user.id, user.is_admin, user.local_only
         ):
             return web.json_response(
                 {

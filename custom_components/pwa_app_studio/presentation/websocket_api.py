@@ -7,10 +7,10 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from ..application.services import DistributionService, PwaAppService
-from ..const import DOMAIN
+from ..const import DOMAIN, VERSION
 from ..infrastructure.lovelace_adapter import HaLovelaceAdapter, HaUserDirectoryAdapter
 
 
@@ -133,7 +133,16 @@ def async_register_websocket_commands(
             connection.send_error(msg["id"], "not_found", "PWA app not found.")
             return
         origin = msg.get("origin")
-        if not origin:
+        if app.access.local_guests:
+            try:
+                origin = get_url(hass, allow_external=False, allow_cloud=False)
+            except NoURLAvailableError:
+                connection.send_error(
+                    msg["id"], "no_internal_url",
+                    "Lege unter Einstellungen → System → Netzwerk die lokale Home-Assistant-Adresse fest.",
+                )
+                return
+        elif not origin:
             try:
                 origin = get_url(hass, allow_internal=True)
             except Exception:  # noqa: BLE001
@@ -158,7 +167,9 @@ def async_register_websocket_commands(
             connection.send_error(msg["id"], "not_found", "PWA app not found.")
             return
         user = connection.user
-        if not user.is_active or not app_service.can_user_access(app, user.id, user.is_admin):
+        if not user.is_active or not app_service.can_user_access(
+            app, user.id, user.is_admin, user.local_only
+        ):
             connection.send_error(
                 msg["id"],
                 "unauthorized",
@@ -171,6 +182,7 @@ def async_register_websocket_commands(
                 "app_id": app.app_id,
                 "slug": app.slug,
                 "version": app.version,
+                "studio_version": VERSION,
                 "manifest": app.manifest.to_dict(),
                 "content": app.content.to_dict(),
                 "user": {

@@ -1,5 +1,7 @@
 /* Hidden native HA panel rendering authorized PWAs inside the HA context-request tree. */
 
+import { loadPwaCardHelpers } from "./pwa-card-helpers.js";
+
 class PwaAppStudioRunnerPanel extends HTMLElement {
   constructor() {
     super();
@@ -59,16 +61,21 @@ class PwaAppStudioRunnerPanel extends HTMLElement {
 
   async _bootstrap() {
     if (!this._hass || !this._appSlug) return;
+    const slug = this._appSlug;
     this._loading = true;
     this._error = null;
+    this._runtimeData = null;
+    this._dashboardViews = [];
+    this._activeViewIdx = 0;
+    this._renderedElements = [];
     this._renderShell();
 
     try {
       const data = await this._hass.callWS({
         type: "pwa_app_studio/runtime/get",
-        slug: this._appSlug,
+        slug,
       });
-      this._runtimeData = data;
+      if (this._appSlug !== slug) return;
 
       if (data.content.source_mode === "lovelace_dashboard") {
         const urlPath =
@@ -79,22 +86,31 @@ class PwaAppStudioRunnerPanel extends HTMLElement {
           type: "lovelace/config",
           url_path: urlPath,
         });
+        if (this._appSlug !== slug) return;
         const views = Array.isArray(lovelaceConfig?.views) ? lovelaceConfig.views : [];
         this._dashboardViews = views;
         if (data.content.view_path) {
           const idx = views.findIndex(
             (v, i) => String(v.path ?? i) === String(data.content.view_path)
           );
-          this._activeViewIdx = idx >= 0 ? idx : 0;
+          if (idx < 0) throw new Error("Die gewählte Ansicht fehlt. Bitte prüfe die Auswahl im Studio.");
+          this._activeViewIdx = idx;
         }
       }
+      this._runtimeData = data;
       this._loading = false;
       this._renderShell();
       await this._mountCards();
     } catch (err) {
+      if (this._appSlug !== slug) return;
       this._loading = false;
       this._error = err?.message || "Zugriff verweigert oder Dashboard nicht ladbar.";
       this._renderShell();
+    } finally {
+      const params = new URLSearchParams(location.search);
+      if (slug === this._appSlug && window.parent !== window && params.get("pwa_shell") === "1") {
+        window.parent.postMessage({ type: "pwa-app-studio:ready", slug }, location.origin);
+      }
     }
   }
 
@@ -120,12 +136,8 @@ class PwaAppStudioRunnerPanel extends HTMLElement {
     container.innerHTML = "";
     this._renderedElements = [];
 
-    if (!window.loadCardHelpers) {
-      container.innerHTML = `<div class="msg">Home Assistant Card Helpers werden geladen...</div>`;
-      return;
-    }
-
-    const helpers = await window.loadCardHelpers();
+    const helpers = await loadPwaCardHelpers(this._hass);
+    if (!container.isConnected) return;
     const content = this._runtimeData.content;
 
     let cardItems = [];
@@ -159,6 +171,8 @@ class PwaAppStudioRunnerPanel extends HTMLElement {
 
   _renderShell() {
     const manifest = this._runtimeData?.manifest || {};
+    const studioVersion = this._runtimeData?.studio_version;
+    const embedded = new URLSearchParams(location.search).get("pwa_shell") === "1";
     const content = this._runtimeData?.content || {};
     const showHeader = !manifest.kiosk_mode && !manifest.hide_ha_header;
     const cols = content.layout_mode === "stack" ? 1 : content.grid_columns || 2;
@@ -206,7 +220,8 @@ class PwaAppStudioRunnerPanel extends HTMLElement {
           padding: 6px 14px;
           border-radius: 999px;
           cursor: pointer;
-          font-size: 13px;
+          font-size: 1rem;
+          min-height: 44px;
           white-space: nowrap;
         }
         .tab-btn.active {
@@ -235,6 +250,8 @@ class PwaAppStudioRunnerPanel extends HTMLElement {
           border-radius: 12px;
           padding: 16px;
         }
+        footer { padding:12px 16px; text-align:center; }
+        footer a { color:inherit; font-size:.8rem; line-height:1.5; text-underline-offset:3px; }
         .err-card {
           color: #fca5a5;
           border-color: #ef4444;
@@ -261,6 +278,9 @@ class PwaAppStudioRunnerPanel extends HTMLElement {
           ? `<div style="padding:16px"><div class="err-card">${this._esc(this._error)}</div></div>`
           : `<div id="cards-stage"></div>`
       }
+      ${!embedded && studioVersion ? `<footer><a href="https://github.com/seb5594" target="_blank" rel="noopener noreferrer">
+        App ${this._esc(studioVersion)} developed by seb5594 (Sebastian Schmidt)<br>
+        Made with ❤️ in Germany 🇩🇪</a></footer>` : ""}
     `;
 
     this.shadowRoot.querySelectorAll(".tab-btn").forEach((btn) => {

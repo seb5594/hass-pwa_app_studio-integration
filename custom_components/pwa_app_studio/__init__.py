@@ -11,6 +11,7 @@ from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
+from homeassistant.helpers import config_validation as cv
 from homeassistant.core import HomeAssistant
 
 from .application.services import (
@@ -37,6 +38,8 @@ from .infrastructure.qr_generator import SegnoQrGenerator
 from .infrastructure.storage_repository import HaStorageAppRepository
 from .presentation.http_views import async_register_http_views
 from .presentation.websocket_api import async_register_websocket_commands
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS: list[Platform] = [Platform.BUTTON]
 

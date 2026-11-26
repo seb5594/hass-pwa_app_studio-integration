@@ -45,3 +45,11 @@ If my work helped you or turned out to be useful, show your appreciation with a 
 
 Published under the [Apache License 2.0](LICENSE).
 <!-- license:end -->
+
+## Launch and sharing
+
+The five-step designer previews the app’s launch screen and offers three motion styles. Choose **Guests on the home network** to share an app with selected local-only, non-admin Home Assistant accounts through the internal URL. The companion link opens the app in the active Home Assistant session. A standalone installation reuses the session available to its browser context and signs in through Home Assistant when needed.
+
+Minimum Home Assistant Core version: **2026.9.0**.
+
+[Architectural review (German)](docs/architekturpruefung.md)

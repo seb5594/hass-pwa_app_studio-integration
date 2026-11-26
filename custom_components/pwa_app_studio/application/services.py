@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from copy import deepcopy
 from typing import Any
 
 from ..const import HTTP_BASE_PATH
@@ -61,8 +62,7 @@ class PwaAppService:
             app = PwaApp.create_new(payload)
             app.slug = self._ensure_unique_slug(app.slug)
             await self._resolve_dashboard_icon(app)
-            self._apps[app.app_id] = app
-            await self._repository.async_save_all(self.list_apps())
+            await self._save_apps({**self._apps, app.app_id: app})
             return app
 
     async def async_update_app(self, app_id: str, payload: dict[str, Any]) -> PwaApp:
@@ -71,6 +71,7 @@ class PwaAppService:
             if existing is None:
                 raise KeyError(f"Unknown PWA app_id: {app_id}")
 
+            existing = deepcopy(existing)
             if "slug" in payload and payload["slug"]:
                 candidate = validate_slug(str(payload["slug"]))
                 if candidate != existing.slug:
@@ -91,19 +92,26 @@ class PwaAppService:
             await self._resolve_dashboard_icon(existing)
             existing.updated_at = utc_now_iso()
             existing.version += 1
-            await self._repository.async_save_all(self.list_apps())
+            await self._save_apps({**self._apps, app_id: existing})
             return existing
 
     async def async_delete_app(self, app_id: str) -> bool:
         async with self._lock:
             if app_id not in self._apps:
                 return False
-            del self._apps[app_id]
-            await self._repository.async_save_all(self.list_apps())
+            updated = self._apps.copy()
+            del updated[app_id]
+            await self._save_apps(updated)
             return True
 
-    def can_user_access(self, app: PwaApp, user_id: str, is_admin: bool) -> bool:
-        return app.access.is_user_allowed(user_id=user_id, is_admin=is_admin)
+    async def _save_apps(self, apps: dict[str, PwaApp]) -> None:
+        await self._repository.async_save_all(list(apps.values()))
+        self._apps = apps
+
+    def can_user_access(
+        self, app: PwaApp, user_id: str, is_admin: bool, local_only: bool = False
+    ) -> bool:
+        return app.access.is_user_allowed(user_id, is_admin, local_only)
 
     def _ensure_unique_slug(self, base_slug: str) -> str:
         used = {app.slug for app in self._apps.values()}
@@ -221,12 +229,13 @@ class DistributionService:
         permitted = [
             user
             for user in all_users
-            if app.access.is_user_allowed(user["id"], user["is_admin"])
+            if app.access.is_user_allowed(user["id"], user["is_admin"], user.get("local_only", False))
         ]
         return {
             "app_id": app.app_id,
             "slug": app.slug,
             "launch_url": launch_url,
+            "companion_url": f"homeassistant://navigate/pwa-app-studio-runner/{app.slug}",
             "manifest_url": f"{launch_url}manifest.webmanifest?v={app.version}",
             "client_id": f"{launch_url}client",
             "qr_svg": qr_svg,

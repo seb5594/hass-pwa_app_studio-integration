@@ -242,6 +242,7 @@ class PwaManifestOptions:
     hide_ha_header: bool = True
     hide_ha_sidebar: bool = True
     kiosk_mode: bool = False
+    launch_style: str = "ripple"
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> PwaManifestOptions:
@@ -255,6 +256,10 @@ class PwaManifestOptions:
             )
         except ValueError:
             orientation = OrientationMode.ANY
+
+        launch_style = data.get("launch_style", "ripple")
+        if launch_style not in ("ripple", "glow", "still"):
+            launch_style = "ripple"
 
         shortcuts = [
             PwaShortcut.from_dict(item)
@@ -288,6 +293,7 @@ class PwaManifestOptions:
             cache_strategy=str(data.get("cache_strategy") or "network_first"),
             hide_ha_header=bool(data.get("hide_ha_header", True)),
             hide_ha_sidebar=bool(data.get("hide_ha_sidebar", True)),
+            launch_style=launch_style,
             kiosk_mode=bool(data.get("kiosk_mode", False)),
         )
 
@@ -309,6 +315,7 @@ class PwaManifestOptions:
             "cache_strategy": self.cache_strategy,
             "hide_ha_header": self.hide_ha_header,
             "hide_ha_sidebar": self.hide_ha_sidebar,
+            "launch_style": self.launch_style,
             "kiosk_mode": self.kiosk_mode,
         }
 
@@ -385,6 +392,7 @@ class PwaAccessPolicy:
     allow_all_authenticated: bool = True
     allowed_user_ids: list[str] = field(default_factory=list)
     require_admin: bool = False
+    local_guests: bool = False
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> PwaAccessPolicy:
@@ -392,14 +400,17 @@ class PwaAccessPolicy:
         return cls(
             allow_all_authenticated=bool(data.get("allow_all_authenticated", True)),
             allowed_user_ids=list(dict.fromkeys(users)),
+            local_guests=bool(data.get("local_guests", False)),
             require_admin=bool(data.get("require_admin", False)),
         )
 
-    def is_user_allowed(self, user_id: str, is_admin: bool) -> bool:
+    def is_user_allowed(self, user_id: str, is_admin: bool, local_only: bool = False) -> bool:
         if is_admin:
             return True
         if self.require_admin:
             return False
+        if self.local_guests:
+            return local_only and user_id in self.allowed_user_ids
         if self.allow_all_authenticated:
             return True
         return user_id in self.allowed_user_ids
@@ -408,6 +419,7 @@ class PwaAccessPolicy:
         return {
             "allow_all_authenticated": self.allow_all_authenticated,
             "allowed_user_ids": self.allowed_user_ids,
+            "local_guests": self.local_guests,
             "require_admin": self.require_admin,
         }
 
@@ -431,7 +443,7 @@ class PwaApp:
         slug = validate_slug(raw_slug) if raw_slug else slugify_name(manifest.name)
         now = utc_now_iso()
         return cls(
-            app_id=str(payload.get("app_id") or uuid.uuid4().hex[:12]),
+            app_id=uuid.uuid4().hex,
             slug=slug,
             created_at=now,
             updated_at=now,

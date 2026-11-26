@@ -36,7 +36,7 @@ class PwaAppStudioOpenDesignerButton(ButtonEntity):
             identifiers={(DOMAIN, entry.entry_id)},
             name=NAME,
             manufacturer="PWA Web-App Studio",
-            configuration_url=f"homeassistant://{PANEL_URL_PATH}",
+            configuration_url=f"homeassistant://navigate/{PANEL_URL_PATH}",
             model="Home Assistant PWA Builder",
             sw_version=VERSION,
         )

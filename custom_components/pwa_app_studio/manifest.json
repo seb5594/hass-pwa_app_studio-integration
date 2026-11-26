@@ -1,6 +1,9 @@
 {
   "domain": "pwa_app_studio",
   "name": "PWA Web-App Studio",
+  "categories": [
+    "local_services"
+  ],
   "codeowners": [
     "@seb5594"
   ],
@@ -12,13 +15,12 @@
     "lovelace"
   ],
   "documentation": "https://github.com/seb5594/hass-pwa_app_studio-integration",
+  "integration_type": "service",
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/seb5594/hass-pwa_app_studio-integration/issues",
   "requirements": [
-    "pillow>=10.0.0",
     "segno>=1.6.0"
   ],
   "single_config_entry": true,
-  "version": "2026.11.26",
-  "integration_type": "service"
+  "version": "2026.11.26.1"
 }
