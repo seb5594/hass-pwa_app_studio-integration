@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Socraigh PWA Web-App Studio"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Tá PWA Web-App Studio cumraithe cheana féin."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Oscail PWA Web-App Studio",
+        "description": "Oscail an dearthóir chun d'aipeanna gréasáin a bhainistiú."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "Painéal an Bharra Taoibh"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "Dearthóir PWA a oscailt"
+      }
+    }
+  }
+}

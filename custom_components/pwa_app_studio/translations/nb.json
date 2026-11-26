@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Sett opp PWA Web-App Studio"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA Web-App Studio er allerede konfigurert."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Åpne PWA Web-App Studio",
+        "description": "Åpne designeren for å administrere nettappene dine."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "Sidepanel"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "Åpne PWA Designer"
+      }
+    }
+  }
+}

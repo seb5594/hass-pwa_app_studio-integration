@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PWA Web-App Studio beállítása"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "A PWA Web-App Studio már konfigurálva van."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nyissa meg a PWA Web-App Studio-t",
+        "description": "Nyissa meg a tervezőt a webalkalmazások kezeléséhez."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "Oldalsáv panel"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "Nyissa meg a PWA Designert"
+      }
+    }
+  }
+}

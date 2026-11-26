@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "قم بإعداد PWA Web-App Studio"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "تم تكوين PWA Web-App Studio بالفعل."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "افتح PWA Web-App Studio",
+        "description": "افتح المصمم لإدارة تطبيقات الويب الخاصة بك."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "لوحة الشريط الجانبي"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "افتح مصمم PWA"
+      }
+    }
+  }
+}

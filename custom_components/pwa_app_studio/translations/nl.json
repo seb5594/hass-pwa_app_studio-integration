@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PWA Web-App Studio instellen"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA Web-App Studio is al geconfigureerd."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Open PWA Web-App Studio",
+        "description": "Open de ontwerper om uw webapps te beheren."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "Zijbalkpaneel"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "Open PWA-ontwerper"
+      }
+    }
+  }
+}

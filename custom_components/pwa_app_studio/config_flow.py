@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from typing import Any
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -13,21 +12,9 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 
 from .const import (
-    CONF_SHOW_IN_SIDEBAR,
-    DEFAULT_SHOW_IN_SIDEBAR,
     DOMAIN,
+    PANEL_URL_PATH,
 )
-
-
-def _build_schema(defaults: dict[str, Any]) -> vol.Schema:
-    return vol.Schema(
-        {
-            vol.Required(
-                CONF_SHOW_IN_SIDEBAR,
-                default=defaults.get(CONF_SHOW_IN_SIDEBAR, DEFAULT_SHOW_IN_SIDEBAR),
-            ): bool,
-        }
-    )
 
 
 class PwaAppStudioConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -45,12 +32,10 @@ class PwaAppStudioConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title="PWA Web-App Studio",
                 data={},
-                options=user_input,
             )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=_build_schema({}),
         )
 
     @staticmethod
@@ -60,7 +45,7 @@ class PwaAppStudioConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class PwaAppStudioOptionsFlow(OptionsFlow):
-    """Store the sidebar option. The config entry listener applies it."""
+    """Open the admin Studio panel through Home Assistant's options dialog."""
 
     def __init__(self, entry: ConfigEntry) -> None:
         self._entry = entry
@@ -69,10 +54,10 @@ class PwaAppStudioOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        current = {**self._entry.data, **self._entry.options}
-        return self.async_show_form(
-            step_id="init",
-            data_schema=_build_schema(current),
+            return self.async_external_step_done(next_step_id="finish")
+        return self.async_external_step(
+            step_id="init", url=f"/{PANEL_URL_PATH}?studio_options={self.flow_id}",
         )
+
+    async def async_step_finish(self, user_input: dict[str, Any] | None = None) -> dict[str, Any]:
+        return self.async_create_entry(title="", data=dict(self._entry.options))

@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Настройте PWA Web-App Studio"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA Web-App Studio вече е конфигуриран."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Отворете PWA Web-App Studio",
+        "description": "Отворете дизайнера, за да управлявате своите уеб приложения."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "Панел на страничната лента"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "Отворете PWA Designer"
+      }
+    }
+  }
+}

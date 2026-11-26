@@ -24,7 +24,10 @@ class PwaAppStudioConnectPanel extends HTMLElement {
   }
 
   _render(reference) {
-    const t = (key, values) => studioMessage(studioLanguage(this._hass), key, values);
+    const language = studioLanguage(this._hass);
+    this.lang = language;
+    this.dir = ["ar", "he"].includes(language) ? "rtl" : "ltr";
+    const t = (key, values) => studioMessage(language, key, values);
     const sr = this.shadowRoot;
     sr.innerHTML = `
       <style>

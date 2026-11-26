@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Settu upp PWA Web-App Studio"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA Web-App Studio er þegar stillt."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opnaðu PWA Web-App Studio",
+        "description": "Opnaðu hönnuðinn til að stjórna vefforritunum þínum."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "Hliðarstikuborð"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "Opnaðu PWA Designer"
+      }
+    }
+  }
+}

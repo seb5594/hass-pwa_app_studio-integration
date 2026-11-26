@@ -59,6 +59,8 @@ class PwaAppShellView(HomeAssistantView):
 <body>
   <div id="pwa-root"
        data-slug="{escaped_slug}"
+       data-revision="{ver}"
+       data-studio="{html.escape(VERSION)}"
        data-name="{escaped_name}"
        data-base="{base}/"
        data-sw-url="{base}/sw.js?v={ver}"
@@ -70,12 +72,12 @@ class PwaAppShellView(HomeAssistantView):
       <div class="welcome">
         <div class="mark"><img src="{base}/icon-192.png?v={ver}" width="76" height="76" alt="" /></div>
         <h1>{escaped_name}</h1>
-        <p role="status" id="launch-status">Deine App wird geöffnet …</p>
+        <p role="status" id="launch-status"></p>
       </div>
     </main>
   </div>
   <footer><a href="https://github.com/seb5594" target="_blank" rel="noopener noreferrer">
-    App {html.escape(VERSION)} developed by seb5594 (Sebastian Schmidt)<br />
+    App {html.escape(app.manifest.release_version or VERSION)} developed by seb5594 (Sebastian Schmidt)<br />
     Made with ❤️ in Germany 🇩🇪</a></footer>
   <script type="module" src="{STATIC_URL_PATH}/pwa-runtime.js"></script>
 </body>
@@ -141,6 +143,7 @@ class PwaServiceWorkerView(HomeAssistantView):
                 f"{STATIC_URL_PATH}/pwa-companion-connect.js",
                 f"{STATIC_URL_PATH}/pwa-install.js",
                 f"{STATIC_URL_PATH}/pwa-studio-i18n.js",
+                f"{STATIC_URL_PATH}/pwa-studio-locales.js",
             ]
         )
         offline_enabled = "true" if app.manifest.offline_enabled else "false"
@@ -342,6 +345,26 @@ class PwaRuntimeApiView(HomeAssistantView):
         )
 
 
+class PwaReleaseView(HomeAssistantView):
+    """Expose the public release label and revision already present in the shell."""
+
+    url = f"{HTTP_BASE_PATH}/app/{{slug}}/release"
+    name = "pwa_app_studio:release"
+    requires_auth = False
+
+    def __init__(self, app_service: PwaAppService) -> None:
+        self._app_service = app_service
+
+    async def get(self, request: web.Request, slug: str) -> web.Response:
+        app = self._app_service.get_app_by_slug(slug)
+        if app is None:
+            raise web.HTTPNotFound()
+        return web.json_response(
+            {"revision": app.version, "studio": VERSION, "release": app.manifest.release_version or VERSION},
+            headers={"Cache-Control": "no-store"},
+        )
+
+
 def async_register_http_views(
     hass: HomeAssistant,
     app_service: PwaAppService,
@@ -355,3 +378,4 @@ def async_register_http_views(
     hass.http.register_view(PwaIconView(app_service, icon_composer))
     hass.http.register_view(PwaIconPreviewApiView(icon_composer))
     hass.http.register_view(PwaRuntimeApiView(app_service))
+    hass.http.register_view(PwaReleaseView(app_service))

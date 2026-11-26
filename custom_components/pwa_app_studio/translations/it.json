@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configura PWA Web-App Studio"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA Web-App Studio è già configurato."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Apri PWA Web-App Studio",
+        "description": "Apri la finestra di progettazione per gestire le tue app web."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "Pannello della barra laterale"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "Apri Progettazione PWA"
+      }
+    }
+  }
+}

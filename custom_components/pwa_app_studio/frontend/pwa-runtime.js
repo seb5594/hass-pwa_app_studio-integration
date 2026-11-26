@@ -16,6 +16,7 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
   const language = studioLanguage({ config: { language: document.documentElement.lang } });
   const t = (key) => studioMessage(language, key);
   const launch = root.querySelector(".launch");
+  launch.querySelector("#launch-status").textContent = t("launch_loading");
 
   const origin = window.location.origin;
   const clientId = `${origin}${clientUrl}`;
@@ -363,6 +364,40 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
     };
   }
 
+  function watchRelease() {
+    let checking = false;
+    const check = async () => {
+      if (document.hidden || checking || document.getElementById("pwa-release-notice")) return;
+      checking = true;
+      try {
+        const response = await fetch(`${basePath}release`, { cache: "no-store" });
+        if (!response.ok) return;
+        const latest = await response.json();
+        if (latest.revision === Number(root.dataset.revision) && latest.studio === root.dataset.studio) return;
+        const notice = document.createElement("section");
+        notice.id = "pwa-release-notice";
+        notice.className = "install-banner";
+        const text = document.createElement("p");
+        text.setAttribute("role", "status");
+        text.textContent = studioMessage(language, "release_available", { version: latest.release });
+        const update = document.createElement("button");
+        update.type = "button";
+        update.textContent = t("release_reload");
+        update.onclick = () => location.reload();
+        notice.append(text, update);
+        root.before(notice);
+      } catch {
+        // Keep the current view when the server is unreachable.
+      } finally {
+        checking = false;
+      }
+    };
+    document.addEventListener("visibilitychange", check);
+    window.addEventListener("online", check);
+    setInterval(check, 60000);
+    void check();
+  }
+
   if (location.pathname === `/pwa_app_studio/share/${slug}` ||
       new URLSearchParams(location.search).get("share_link") === "1") {
     showSharePage();
@@ -397,9 +432,9 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
     if (runtimeResp.status === 403) {
       const errJson = await runtimeResp.json().catch(() => ({}));
       renderStatusCard(
-        "Zugriff verweigert",
-        `${esc(errJson.message || "Keine Berechtigung für diese App.")}<br/><small>Angemeldet als: ${esc(errJson?.user?.name || "Unbekannt")}</small>`,
-        `<button id="relogin-btn">Mit anderem Konto anmelden</button>`
+        t("runtime_denied"),
+        esc(studioMessage(language, "runtime_signed_in", { user: errJson?.user?.name || t("runtime_unknown") })),
+        `<button id="relogin-btn">${esc(t("runtime_other_user"))}</button>`
       );
       document.getElementById("relogin-btn")?.addEventListener("click", async () => {
         await startOAuthFlow();
@@ -411,7 +446,7 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
       throw new Error(`HTTP ${runtimeResp.status}`);
     }
 
-    document.getElementById("launch-status").textContent = "Deine Ansicht wird geladen …";
+    document.getElementById("launch-status").textContent = t("runtime_loading");
     renderInstallBannerIfWanted();
 
     const frame = document.createElement("iframe");
@@ -432,11 +467,12 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
     window.addEventListener("message", ready);
     frame.allow = "fullscreen";
     root.appendChild(frame);
+    watchRelease();
   } catch (err) {
     renderStatusCard(
-      "Verbindungsfehler",
-      `Die PWA konnte nicht gestartet werden (${esc(err?.message || err)}).`,
-      `<button onclick="window.location.reload()">Erneut versuchen</button>`
+      t("runtime_error"),
+      esc(err?.message || err),
+      `<button onclick="window.location.reload()">${esc(t("runtime_retry"))}</button>`
     );
   }
 })();

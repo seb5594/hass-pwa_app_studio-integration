@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Stabbilixxi PWA Web-App Studio"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA Web-App Studio huwa diġà kkonfigurat."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Iftaħ PWA Web-App Studio",
+        "description": "Iftaħ id-disinjatur biex timmaniġġja l-apps tal-web tiegħek."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "Bord tal-Istrixxa tal-Ġenb"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "Iftaħ PWA Designer"
+      }
+    }
+  }
+}

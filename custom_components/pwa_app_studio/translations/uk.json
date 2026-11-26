@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Налаштувати PWA Web-App Studio"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA Web-App Studio уже налаштовано."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Відкрийте PWA Web-App Studio",
+        "description": "Відкрийте конструктор, щоб керувати своїми веб-додатками."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "Панель бічної панелі"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "Відкрийте конструктор PWA"
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PWA Web-App Studio をセットアップします"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA Web-App Studio はすでに構成されています。"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "PWA Web-App Studio を開く",
+        "description": "デザイナーを開いて Web アプリを管理します。"
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "サイドバーパネル"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "PWA デザイナーを開く"
+      }
+    }
+  }
+}

@@ -65,20 +65,34 @@ Beim Teilen über den Browser verwendet der Gast-QR-Code die interne Home-Assist
 
 ## Die Browser-Web-App installieren
 
+### Das Studio öffnen
+
+Öffne **Einstellungen → Geräte & Dienste → PWA Web-App Studio → Konfigurieren** und folge dem Link zum Designer. Der direkte Pfad lautet `/pwa-app-studio`.
+
+Wenn du regelmäßig an deinen Apps arbeitest, aktiviere in der Entitätenliste der Integration **Sidebar Panel** und schalte es ein. Auf einem Wartungs-Dashboard kannst du stattdessen eine Lovelace-Schaltfläche mit der Aktion **Navigieren** und dem Pfad `/pwa-app-studio` hinterlegen. Die optionale Button-Entität **PWA Designer öffnen** öffnet den Designer in deiner aktiven Admin-Sitzung. Schalter und Button sind bei einer neuen Einrichtung in der Entitätenregistrierung standardmäßig deaktiviert.
+
 1. Wähle unter **Teilen** die Schaltfläche **Zum Installieren im Browser öffnen** oder **Auf diesem Gerät installieren**. Wenn die Seite in Home Assistant bleibt, nutze **Browser-Link kopieren** und füge den Link in deinem Browser ein. Die Web-App braucht HTTPS mit gültigem Zertifikat.
 2. Auf iPhone und iPad öffnest du den Link in Safari und wählst **Teilen → Zum Home-Bildschirm**. Aktiviere **Als Web-App öffnen**, falls es angezeigt wird. Auf Android tippe auf **Jetzt installieren**, wenn dein Browser den Dialog anbietet, oder suche im Browsermenü nach **App installieren** oder **Zum Startbildschirm hinzufügen**. [Anleitung von Apple](https://support.apple.com/de-de/guide/iphone/iphea86e5236/ios)
 3. Öffne die App über das Symbol auf dem Startbildschirm. Melde dich an, falls du dazu aufgefordert wirst, oder nutze die Freigabe über die Companion-App.
 
 ### Die Web-App über die Companion-App freigeben
 
+Beispiel aus der Praxis. Sebastian baut eine Abfahrtsanzeige als Web-App und schickt seinem Onkel den Browser-Link über WhatsApp. Sein Onkel ist schon in der offiziellen Home-Assistant-App angemeldet und hat Zugriff auf die Web-App.
+
 1. Öffne im Studio die gespeicherte App, aktiviere **Zugriff → Anmeldung über die Companion-App erlauben** und speichere. Verwende HTTPS für die Web-App und in der Companion-App. Wähle in beiden denselben Home-Assistant-Server.
-2. Öffne den Link in deinem Browser oder starte die installierte App. Auf dem iPhone oder iPad öffnest du die installierte Kopie über das Symbol auf dem Home-Bildschirm.
-3. Wähle **Über die Companion-App anmelden → Home Assistant öffnen**. Vergleiche den angezeigten Code mit dem im Browser und bestätige die Freigabe. Falls ein Eingabefeld erscheint, gib den Code manuell ein. Du kannst die Freigabeseite auch über eine Dashboard-Schaltfläche mit dem Pfad `/pwa-app-studio-connect` öffnen.
+2. Öffne den WhatsApp-Link im Browser und wähle **Über die Companion-App anmelden**. Die Seite zeigt den Gerätecode und die Schaltfläche **Code kopieren**. Auf dem iPhone oder iPad öffnest du eine bereits installierte Kopie über ihr Symbol auf dem Home-Bildschirm.
+3. Tippe auf **Home Assistant öffnen**. Prüfe Instanz, App und Konto und vergleiche den Code. Falls ein Eingabefeld erscheint, gib den Code ein oder füge ihn ein. Tippe auf **Anmeldung freigeben**. Die Freigabeseite ist auch über eine Dashboard-Schaltfläche mit dem Pfad `/pwa-app-studio-connect` erreichbar.
 4. Wechsle zum selben Browser-Tab oder zur installierten Web-App zurück. Die Anmeldung erfolgt automatisch. Du kannst auch auf **Freigabe prüfen** tippen. Jeder Code gilt fünf Minuten und für eine Anmeldung. **Im Browser anmelden** bleibt verfügbar.
 
 Die Web-App bekommt eine eigene Home-Assistant-Sitzung mit den Rechten deines Kontos. Du kannst sie im Home-Assistant-Profil unter **Sicherheit → Aktualisierungstoken** widerrufen.
 
 **Link teilen** nutzt das Teilen-Menü des Geräts, wenn es verfügbar ist. In der Android-Companion-App kann sich die Freigabeseite im Standardbrowser öffnen. Je nach Browser kannst du dort das Browsermenü oder **Browser-Link kopieren** nutzen.
+
+### Ein Gäste-Dashboard gestalten und aktualisieren
+
+Für deine Terrasse kannst du unter **Inhalt → Einzelne Karten auswählen** eine Markdown-Karte mit Infos für Besucher und eine Schaltfläche für das Terrassenlicht anlegen. Bearbeite Titel, Text und Entität direkt in den Kartenfeldern. Prüfe das Ergebnis in der Smartphone-Vorschau und speichere. Weitere Einstellungen findest du unter **Kartenkonfiguration**.
+
+Trage unter **App → App-Version** zum Beispiel `1.1` ein und speichere. Die Version erscheint unten in der Web-App. Hat ein Gast die App offen, erscheint nach der Update-Prüfung **App aktualisieren**. Ein Tipp lädt die Ansicht neu. Das Startbildschirm-Symbol und die Anmeldung bleiben erhalten. Wer die App später online öffnet, bekommt direkt den aktuellen Stand.
 
 Der Offline-Cache speichert die App-Hülle, das Symbol und weitere öffentliche Dateien. Karten, aktuelle Zustände und die Bedienung deiner Geräte brauchen eine Verbindung zu Home Assistant.
 
@@ -90,3 +104,7 @@ Der Offline-Cache speichert die App-Hülle, das Symbol und weitere öffentliche 
 - **Eine Karte fehlt.** Prüfe die Karte zuerst in Home Assistant mit demselben Konto. Bei einer benutzerdefinierten Karte prüfe auch, ob ihre Ressource im Frontend verfügbar ist.
 
 Wenn du festhängst, gib am besten deine Core-Version, die Studio-Version, das Gerät und die Schritte an, mit denen sich das Problem nachstellen lässt. [Problem melden](https://github.com/seb5594/hass-pwa_app_studio-integration/issues) · [Versionsverlauf](CHANGELOG.md) · [Architektur](docs/architekturpruefung.md)
+
+## Weitere Sprachen
+
+[Français](docs/README.fr.md) · [Español](docs/README.es.md) · [Italiano](docs/README.it.md) · [Português](docs/README.pt.md) · [Português (Brasil)](docs/README.pt-BR.md) · [Nederlands](docs/README.nl.md) · [Polski](docs/README.pl.md) · [Čeština](docs/README.cs.md) · [Slovenčina](docs/README.sk.md) · [Magyar](docs/README.hu.md) · [Română](docs/README.ro.md) · [Български](docs/README.bg.md) · [Ελληνικά](docs/README.el.md) · [Svenska](docs/README.sv.md) · [Dansk](docs/README.da.md) · [Norsk](docs/README.nb.md) · [Suomi](docs/README.fi.md) · [Українська](docs/README.uk.md) · [Русский](docs/README.ru.md) · [Türkçe](docs/README.tr.md) · [简体中文](docs/README.zh-Hans.md) · [繁體中文](docs/README.zh-Hant.md) · [日本語](docs/README.ja.md) · [العربية](docs/README.ar.md) · [हिन्दी](docs/README.hi.md) · [עברית](docs/README.he.md) · [Bahasa Indonesia](docs/README.id.md) · [Hrvatski](docs/README.hr.md) · [Slovenščina](docs/README.sl.md) · [Eesti](docs/README.et.md) · [Latviešu](docs/README.lv.md) · [Lietuvių](docs/README.lt.md) · [Gaeilge](docs/README.ga.md) · [Malti](docs/README.mt.md) · [Íslenska](docs/README.is.md)

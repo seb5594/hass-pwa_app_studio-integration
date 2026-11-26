@@ -40,7 +40,7 @@ from .presentation.companion_pairing import CompanionApprovalView, CompanionPair
 from .presentation.http_views import async_register_http_views
 from .presentation.websocket_api import async_register_websocket_commands
 
-PLATFORMS: list[Platform] = [Platform.BUTTON]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SWITCH]
 
 
 @dataclass
@@ -120,25 +120,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     else:
         # Older Core loads forwarded platforms after the parent setup has returned.
-        hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, Platform.BUTTON))
-    entry.async_on_unload(entry.add_update_listener(_async_reload_options))
+        for platform in PLATFORMS:
+            hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, platform))
+    entry.async_on_unload(entry.add_update_listener(_async_register_designer_panel))
     return True
 
 
-async def _async_reload_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
-async def _async_register_panels(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_register_designer_panel(hass: HomeAssistant, entry: ConfigEntry) -> None:
     opts = {**entry.data, **entry.options}
     show_in_sidebar = bool(opts.get(CONF_SHOW_IN_SIDEBAR, DEFAULT_SHOW_IN_SIDEBAR))
     sidebar_title = DEFAULT_SIDEBAR_TITLE if show_in_sidebar else None
     sidebar_icon = DEFAULT_SIDEBAR_ICON if show_in_sidebar else None
 
+    panel = hass.data.get("frontend_panels", {}).get(PANEL_URL_PATH)
+    if panel is not None and panel.sidebar_title == sidebar_title:
+        return
     _remove_panel_if_exists(hass, PANEL_URL_PATH)
-    _remove_panel_if_exists(hass, RUNNER_PANEL_URL_PATH)
-    _remove_panel_if_exists(hass, CONNECT_PANEL_URL_PATH)
-
     panel_options = {}
     if "handle_safe_area" in signature(panel_custom.async_register_panel).parameters:
         panel_options["handle_safe_area"] = True
@@ -156,6 +153,15 @@ async def _async_register_panels(hass: HomeAssistant, entry: ConfigEntry) -> Non
         config={},
         **panel_options,
     )
+
+
+async def _async_register_panels(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    await _async_register_designer_panel(hass, entry)
+    _remove_panel_if_exists(hass, RUNNER_PANEL_URL_PATH)
+    _remove_panel_if_exists(hass, CONNECT_PANEL_URL_PATH)
+    panel_options = {}
+    if "handle_safe_area" in signature(panel_custom.async_register_panel).parameters:
+        panel_options["handle_safe_area"] = True
 
     # Hidden non-admin PWA runner panel mounted inside HA context provider tree
     await panel_custom.async_register_panel(

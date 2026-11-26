@@ -248,6 +248,7 @@ class PwaManifestOptions:
     hide_ha_sidebar: bool = True
     kiosk_mode: bool = False
     launch_style: str = "ripple"
+    release_version: str = ""
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> PwaManifestOptions:
@@ -300,6 +301,7 @@ class PwaManifestOptions:
             hide_ha_sidebar=bool(data.get("hide_ha_sidebar", True)),
             launch_style=launch_style,
             kiosk_mode=bool(data.get("kiosk_mode", False)),
+            release_version=str(data.get("release_version") or "").strip()[:60],
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -321,6 +323,7 @@ class PwaManifestOptions:
             "hide_ha_header": self.hide_ha_header,
             "hide_ha_sidebar": self.hide_ha_sidebar,
             "launch_style": self.launch_style,
+            "release_version": self.release_version,
             "kiosk_mode": self.kiosk_mode,
         }
 

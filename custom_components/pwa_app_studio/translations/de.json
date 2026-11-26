@@ -2,10 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "PWA Web-App Studio einrichten",
-        "data": {
-          "show_in_sidebar": "Sidebar-Tab für Administratoren aktivieren"
-        }
+        "title": "PWA Web-App Studio einrichten"
       }
     },
     "abort": {
@@ -15,14 +12,17 @@
   "options": {
     "step": {
       "init": {
-        "title": "PWA Web-App Studio Optionen",
-        "data": {
-          "show_in_sidebar": "Sidebar-Tab für Administratoren aktivieren"
-        }
+        "title": "PWA Web-App Studio öffnen",
+        "description": "Öffne den Designer, um deine Web-Apps zu verwalten."
       }
     }
   },
   "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "Sidebar Panel"
+      }
+    },
     "button": {
       "open_designer": {
         "name": "PWA Designer öffnen"

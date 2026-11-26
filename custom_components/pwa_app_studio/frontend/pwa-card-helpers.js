@@ -1,4 +1,6 @@
 /* Home Assistant exposes card helpers when its Lovelace module has loaded. */
+import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
+
 export async function loadPwaCardHelpers(hass) {
   if (!window.loadCardHelpers) {
     const main = document.querySelector("home-assistant")?.shadowRoot?.querySelector("home-assistant-main");
@@ -8,7 +10,7 @@ export async function loadPwaCardHelpers(hass) {
     await routes?.[dashboard?.url_path || "lovelace"]?.load?.();
   }
   if (!window.loadCardHelpers) {
-    throw new Error("Dashboard-Karten konnten nicht geladen werden.");
+    throw new Error(studioMessage(studioLanguage(hass), "load_failed"));
   }
   return window.loadCardHelpers();
 }

@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Ρύθμιση του PWA Web-App Studio"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Το PWA Web-App Studio έχει ήδη διαμορφωθεί."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Ανοίξτε το PWA Web-App Studio",
+        "description": "Ανοίξτε τον σχεδιαστή για να διαχειριστείτε τις εφαρμογές ιστού σας."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "Πίνακας πλευρικής γραμμής"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "Ανοίξτε το PWA Designer"
+      }
+    }
+  }
+}

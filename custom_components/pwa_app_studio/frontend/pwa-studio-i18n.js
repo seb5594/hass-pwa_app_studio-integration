@@ -1,6 +1,21 @@
 /* PWA Web-App Studio designer translations. English is the default. */
 
+import { LOCALIZED_MESSAGES } from "./pwa-studio-locales.js";
+
 const MESSAGES = {
+  release_version: ["App version (optional)", "App-Version (optional)"],
+  release_available: ["Version {version} is available. Reload to update.", "Version {version} ist verfügbar. Lade die App neu, um sie zu aktualisieren."],
+  release_reload: ["Update app", "App aktualisieren"],
+  card_title: ["Card title", "Kartentitel"],
+  card_entity: ["Home Assistant entity", "Home-Assistant-Entität"],
+  card_text: ["Markdown text", "Markdown-Text"],
+  runtime_denied: ["Access denied", "Zugriff verweigert"],
+  runtime_other_user: ["Sign in with another account", "Mit anderem Konto anmelden"],
+  runtime_error: ["Connection error", "Verbindungsfehler"],
+  runtime_retry: ["Try again", "Erneut versuchen"],
+  runtime_loading: ["Loading your view…", "Deine Ansicht wird geladen …"],
+  runtime_unknown: ["Unknown account", "Unbekanntes Konto"],
+  runtime_signed_in: ["Signed in as {user}", "Angemeldet als {user}"],
   step_app: ["App", "App"],
   step_content: ["Content", "Inhalt"],
   step_icon: ["Icon", "Symbol"],
@@ -243,13 +258,20 @@ const MESSAGES = {
   pairing_back: ["Enter another code", "Anderen Code eingeben"],
 };
 
+export const STUDIO_LANGUAGES = ["en", "de", ...Object.keys(LOCALIZED_MESSAGES)].sort();
+
 export function studioLanguage(hass) {
   // Older Core releases may only expose the active frontend language.
   const language = hass?.config?.language || hass?.locale?.language || hass?.language || "en";
-  return /^de(?:[-_]|$)/i.test(language.trim()) ? "de" : "en";
+  const normalized = language.trim().toLowerCase().replace(/_/g, "-");
+  const code = normalized.split("-")[0];
+  if (code === "zh") return /(?:hant|tw|hk|mo)/.test(normalized) ? "zh-hant" : "zh-hans";
+  if (code === "no") return "nb";
+  if (code === "iw") return "he";
+  return LOCALIZED_MESSAGES[normalized] ? normalized : code === "de" || LOCALIZED_MESSAGES[code] ? code : "en";
 }
 
 export function studioMessage(language, key, values = {}) {
-  const text = MESSAGES[key]?.[language === "de" ? 1 : 0] ?? key;
+  const text = LOCALIZED_MESSAGES[language]?.[key] ?? MESSAGES[key]?.[language === "de" ? 1 : 0] ?? key;
   return text.replace(/\{(\w+)\}/g, (token, name) => String(values[name] ?? token));
 }

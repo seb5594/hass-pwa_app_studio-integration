@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Seadistage PWA Web-App Studio"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA Web-App Studio on juba konfigureeritud."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Avage PWA Web-App Studio",
+        "description": "Avage oma veebirakenduste haldamiseks kujundaja."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "Külgriba paneel"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "Avage PWA Designer"
+      }
+    }
+  }
+}

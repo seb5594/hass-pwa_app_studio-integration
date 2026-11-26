@@ -2,7 +2,7 @@
 
 import { androidBrowserLink, companionAppLink, isAndroidWebView, isCompanionWebView } from "./pwa-install.js";
 import { loadPwaCardHelpers } from "./pwa-card-helpers.js";
-import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
+import { STUDIO_LANGUAGES, studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
 
 const STUDIO_ACCENT = "#2563eb";
 const STUDIO_LOGO = new URL("./studio-logo.png", import.meta.url).href;
@@ -122,7 +122,21 @@ class PwaAppStudioPanel extends HTMLElement {
       this._render();
       this._renderDevicePreviewCards();
     }
-    if (isFirst) this._bootstrap();
+    if (isFirst) {
+      this._bootstrap();
+      const url = new URL(location.href);
+      const flow = url.searchParams.get("studio_options");
+      if (flow) {
+        url.searchParams.delete("studio_options");
+        history.replaceState(history.state, "", url);
+        const apiPath = `config/config_entries/options/flow/${encodeURIComponent(flow)}`;
+        void value.callApi("GET", apiPath).then((step) => {
+          if (step.type === "external" && step.url === `/pwa-app-studio?studio_options=${flow}`) {
+            return value.callApi("POST", apiPath, {});
+          }
+        }).catch(() => {});
+      }
+    }
   }
 
   set panel(value) {
@@ -235,8 +249,8 @@ class PwaAppStudioPanel extends HTMLElement {
         orientation: "any",
         theme_color: STUDIO_ACCENT,
         background_color: themeColor(["--primary-background-color"], "#111827"),
-        lang: "de",
-        dir: "ltr",
+        lang: this._language || "en",
+        dir: ["ar", "he"].includes(this._language) ? "rtl" : "ltr",
         categories: ["utilities"],
         shortcuts: [],
         prefer_related_applications: false,
@@ -423,7 +437,9 @@ class PwaAppStudioPanel extends HTMLElement {
       const appsRes = await this._hass.callWS({ type: "pwa_app_studio/apps/list" });
       this._apps = appsRes.apps || [];
       if (this._draft !== draft) return;
-      this._statusMsg = this._t("saved", { name: saved.manifest.name, version: saved.version });
+      this._statusMsg = this._t("saved", {
+        name: saved.manifest.name, version: saved.manifest.release_version || saved.version,
+      });
       this._selectApp(saved.app_id);
     } catch (err) {
       if (this._draft !== draft) return;
@@ -623,6 +639,7 @@ class PwaAppStudioPanel extends HTMLElement {
 
   _render() {
     this.lang = this._language;
+    this.dir = ["ar", "he"].includes(this._language) ? "rtl" : "ltr";
     if (!this._draft) {
       this.shadowRoot.innerHTML = `
         <style>:host{display:block;padding:24px;color:var(--primary-text-color,#fff);background:var(--primary-background-color,#111827);min-height:100vh;}</style>
@@ -996,7 +1013,7 @@ class PwaAppStudioPanel extends HTMLElement {
                 <div class="app-item ${app.app_id === this._selectedAppId ? "active" : ""}" data-appid="${this._esc(app.app_id)}">
                   <div>
                     <div style="font-weight:600;font-size:13px;">${this._esc(app.manifest.name)}</div>
-                    <div style="font-size:11px;opacity:0.7;">/${this._esc(app.slug)}/ • v${app.version}</div>
+                    <div style="font-size:11px;opacity:0.7;">/${this._esc(app.slug)}/ • v${this._esc(app.manifest.release_version || app.version)}</div>
                   </div>
                   <button class="btn danger del-app-btn" aria-label="${this._t("delete_app")}" data-del="${this._esc(app.app_id)}" style="padding:4px 8px;font-size:11px;">✕</button>
                 </div>`
@@ -1095,6 +1112,9 @@ class PwaAppStudioPanel extends HTMLElement {
           <label style="margin-top:10px;">${this._t("description")}
             <input id="f-desc" value="${this._esc(d.manifest.description)}" />
           </label>
+          <label style="margin-top:10px;">${this._t("release_version")}
+            <input id="f-release-version" maxlength="60" value="${this._esc(d.manifest.release_version)}" placeholder="2.1" />
+          </label>
           <label style="margin-top:12px">${this._t("launch_animation")}
             <select id="f-launch">
               ${["ripple", "glow", "aurora", "orbit", "sheen", "rise", "still"].map((style) =>
@@ -1133,12 +1153,17 @@ class PwaAppStudioPanel extends HTMLElement {
             </label>
             <label>${this._t("language_direction")}
               <div style="display:flex;gap:6px;">
-                <input id="f-lang" value="${this._esc(d.manifest.lang)}" style="width:60%;" />
+                <input id="f-lang" list="app-languages" value="${this._esc(d.manifest.lang)}" style="width:60%;" />
                 <select id="f-dir" style="width:40%;">
                   <option value="ltr" ${d.manifest.dir === "ltr" ? "selected" : ""}>${this._t("direction_ltr")}</option>
                   <option value="rtl" ${d.manifest.dir === "rtl" ? "selected" : ""}>${this._t("direction_rtl")}</option>
                 </select>
               </div>
+              <datalist id="app-languages">${STUDIO_LANGUAGES.map((code) => {
+                const name = typeof Intl.DisplayNames === "function"
+                  ? new Intl.DisplayNames([code], { type: "language" }).of(code) : code;
+                return `<option value="${code}">${this._esc(name)}</option>`;
+              }).join("")}</datalist>
             </label>
           </div>
           <div class="field-grid" style="margin-top:12px;">
@@ -1250,6 +1275,8 @@ class PwaAppStudioPanel extends HTMLElement {
 
           <div class="card-box">
             <strong>${this._t("card_order", { count: d.content.cards.length })}</strong>
+            <datalist id="studio-entities">${Object.keys(this._hass?.states || {}).sort().map((id) =>
+              `<option value="${this._esc(id)}">${this._esc(this._hass.states[id].attributes?.friendly_name || id)}</option>`).join("")}</datalist>
             ${
               d.content.cards.length === 0
                 ? `<div style="font-size:13px;opacity:0.7;margin-top:8px;">${this._t("no_cards")}</div>`
@@ -1258,7 +1285,7 @@ class PwaAppStudioPanel extends HTMLElement {
                       (card, idx) => `
                   <div class="card-list-item" draggable="true" data-card-idx="${idx}">
                     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-                      <strong>#${idx + 1} ${this._esc(card.title || card.config?.type || this._t("card"))}</strong>
+                      <strong data-card-title>#${idx + 1} ${this._esc(card.config?.title || card.config?.name || card.title || card.config?.type || this._t("card"))}</strong>
                       <div style="display:flex;gap:4px;align-items:center;">
                         <select class="card-span-sel" aria-label="${this._t("card_columns")}" data-idx="${idx}" style="width:92px;padding:4px;">
                           ${[1, 2, 3, 4]
@@ -1273,7 +1300,20 @@ class PwaAppStudioPanel extends HTMLElement {
                         <button class="btn danger card-rm-btn" aria-label="${this._t("remove_card")}" data-idx="${idx}">✕</button>
                       </div>
                     </div>
-                    <textarea class="card-json-edit" aria-label="${this._t("card_config")}" data-idx="${idx}" rows="4" style="margin-top:8px;font-family:monospace;font-size:12px;">${this._esc(JSON.stringify(card.config, null, 2))}</textarea>
+                    <div class="field-grid">
+                      <label>${this._t("card_title")}
+                        <input class="card-field" data-idx="${idx}" data-field="${"title" in card.config || ["markdown", "entities", "glance", "history-graph", "grid"].includes(card.config.type) ? "title" : "name"}"
+                          value="${this._esc(card.config?.title ?? card.config?.name ?? "")}">
+                      </label>
+                      ${["tile", "button", "gauge", "sensor", "thermostat", "light", "entity"].includes(card.config?.type) ? `
+                        <label>${this._t("card_entity")}<input class="card-field" data-idx="${idx}" data-field="entity"
+                          list="studio-entities" value="${this._esc(card.config?.entity || "")}"></label>` : ""}
+                    </div>
+                    ${card.config?.type === "markdown" ? `<label>${this._t("card_text")}
+                      <textarea class="card-field" data-idx="${idx}" data-field="content" rows="3">${this._esc(card.config.content || "")}</textarea></label>` : ""}
+                    <details><summary>${this._t("card_config")}</summary>
+                      <textarea class="card-json-edit" aria-label="${this._t("card_config")}" data-idx="${idx}" rows="4" style="font-family:monospace;font-size:12px;">${this._esc(JSON.stringify(card.config, null, 2))}</textarea>
+                    </details>
                   </div>`
                     )
                     .join("")
@@ -1606,6 +1646,7 @@ class PwaAppStudioPanel extends HTMLElement {
     bindVal("f-theme", (v) => (this._draft.manifest.theme_color = v), true);
     bindVal("f-bg", (v) => (this._draft.manifest.background_color = v), true);
     bindVal("f-desc", (v) => (this._draft.manifest.description = v));
+    bindVal("f-release-version", (v) => (this._draft.manifest.release_version = v));
     bindChk("f-offline", (v) => (this._draft.manifest.offline_enabled = v));
     bindChk("f-hide-hdr", (v) => (this._draft.manifest.hide_ha_header = v), true);
     bindChk("f-kiosk", (v) => (this._draft.manifest.kiosk_mode = v), true);
@@ -1687,15 +1728,36 @@ class PwaAppStudioPanel extends HTMLElement {
         this._renderDevicePreviewCards();
       });
     });
+    sr.querySelectorAll(".card-field").forEach((input) => {
+      input.addEventListener("change", () => {
+        const index = Number(input.dataset.idx);
+        const card = this._draft.content.cards[index];
+        const field = input.dataset.field;
+        if (input.value) card.config[field] = input.value;
+        else delete card.config[field];
+        sr.querySelector(`.card-json-edit[data-idx="${input.dataset.idx}"]`).value = JSON.stringify(card.config, null, 2);
+        input.closest(".card-list-item").querySelector("[data-card-title]").textContent =
+          `#${index + 1} ${card.config.title || card.config.name || card.title || card.config.type || this._t("card")}`;
+        this._renderDevicePreviewCards();
+      });
+    });
     sr.querySelectorAll(".card-json-edit").forEach((ta) => {
       ta.addEventListener("change", (e) => {
         const i = Number(ta.dataset.idx);
         try {
-          this._draft.content.cards[i].config = JSON.parse(e.target.value);
+          const config = JSON.parse(e.target.value);
+          if (!config || typeof config !== "object" || Array.isArray(config)) {
+            throw new Error(this._t("card_config"));
+          }
+          this._draft.content.cards[i].config = config;
+          ta.setCustomValidity("");
           this._errorMsg = "";
+          this._render();
           this._renderDevicePreviewCards();
         } catch (err) {
           this._errorMsg = this._t("invalid_json", { index: i + 1, message: err.message });
+          ta.setCustomValidity(this._errorMsg);
+          ta.reportValidity();
         }
       });
     });

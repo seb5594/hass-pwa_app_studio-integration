@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PWA Web-App Studio सेट करें"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA Web-App Studio पहले से ही कॉन्फ़िगर किया गया है।"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "PWA Web-App Studio खोलें",
+        "description": "अपने वेब ऐप्स प्रबंधित करने के लिए डिज़ाइनर खोलें।"
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "साइडबार पैनल"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "PWA डिज़ाइनर खोलें"
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Iestatiet PWA Web-App Studio"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA Web-App Studio jau ir konfigurēts."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Atveriet PWA Web-App Studio",
+        "description": "Atveriet noformētāju, lai pārvaldītu savas tīmekļa lietotnes."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "Sānjoslas panelis"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "Atveriet programmu PWA Designer"
+      }
+    }
+  }
+}

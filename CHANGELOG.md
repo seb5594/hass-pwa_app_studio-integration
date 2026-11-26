@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026.11.26.91
+
+- Add a visual Lovelace card editor, regional translations and localized setup guides.
+- Open the Studio from integration options and add optional Sidebar Panel and Open PWA Designer entities.
+- Set a display version per web app and offer a reload when an open app has a newer revision.
+
 ## 2026.11.26.90
 
 - Recover HACS update discovery where the GitHub release list sorts single-digit builds before builds 10–12.

@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "הגדר את PWA Web-App Studio"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA Web-App Studio כבר מוגדר."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "פתח את PWA Web-App Studio",
+        "description": "פתח את המעצב כדי לנהל את אפליקציות האינטרנט שלך."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "לוח סרגל צד"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "פתח את PWA Designer"
+      }
+    }
+  }
+}

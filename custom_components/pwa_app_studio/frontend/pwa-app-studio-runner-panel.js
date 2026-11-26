@@ -1,6 +1,7 @@
 /* Hidden native HA panel rendering authorized PWAs inside the HA context-request tree. */
 
 import { loadPwaCardHelpers } from "./pwa-card-helpers.js";
+import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
 
 class PwaAppStudioRunnerPanel extends HTMLElement {
   constructor() {
@@ -23,6 +24,11 @@ class PwaAppStudioRunnerPanel extends HTMLElement {
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  _t(key, values) {
+    const lang = this._runtimeData?.manifest.lang;
+    return studioMessage(studioLanguage(lang ? { language: lang } : this._hass), key, values);
   }
 
   set hass(value) {
@@ -93,7 +99,7 @@ class PwaAppStudioRunnerPanel extends HTMLElement {
           const idx = views.findIndex(
             (v, i) => String(v.path ?? i) === String(data.content.view_path)
           );
-          if (idx < 0) throw new Error("Die gewählte Ansicht fehlt. Bitte prüfe die Auswahl im Studio.");
+          if (idx < 0) throw new Error(this._t("load_failed"));
           this._activeViewIdx = idx;
         }
       }
@@ -104,7 +110,7 @@ class PwaAppStudioRunnerPanel extends HTMLElement {
     } catch (err) {
       if (this._appSlug !== slug) return;
       this._loading = false;
-      this._error = err?.message || "Zugriff verweigert oder Dashboard nicht ladbar.";
+      this._error = err?.message || this._t("runtime_denied");
       this._renderShell();
     } finally {
       const params = new URLSearchParams(location.search);
@@ -149,7 +155,7 @@ class PwaAppStudioRunnerPanel extends HTMLElement {
     }
 
     if (!cardItems.length) {
-      container.innerHTML = `<div class="msg">Keine Karten konfiguriert.</div>`;
+      container.innerHTML = `<div class="msg">${this._esc(this._t("no_cards"))}</div>`;
       return;
     }
 
@@ -163,7 +169,9 @@ class PwaAppStudioRunnerPanel extends HTMLElement {
         slot.appendChild(el);
         this._renderedElements.push(el);
       } catch (err) {
-        slot.innerHTML = `<div class="err-card">Kartenfehler: ${this._esc(err?.message || err)}</div>`;
+        slot.innerHTML = `<div class="err-card">${this._esc(this._t("card_error", {
+          type: item.config?.type, message: err?.message || err,
+        }))}</div>`;
       }
       container.appendChild(slot);
     }
@@ -278,7 +286,7 @@ class PwaAppStudioRunnerPanel extends HTMLElement {
       </div>
       ${
         this._loading
-          ? `<div style="padding:16px"><div class="msg">Lade PWA-Ansicht...</div></div>`
+          ? `<div style="padding:16px"><div class="msg">${this._esc(this._t("runtime_loading"))}</div></div>`
           : this._error
           ? `<div style="padding:16px"><div class="err-card">${this._esc(this._error)}</div></div>`
           : `<div id="cards-stage"></div>`

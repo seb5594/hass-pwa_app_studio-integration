@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PWA Web-App Studio'yi kur"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA Web-App Studio zaten yapılandırılmış."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "PWA Web-App Studio'yi açın",
+        "description": "Web uygulamalarınızı yönetmek için tasarımcıyı açın."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "Kenar Çubuğu Paneli"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "PWA Designer'ı açın"
+      }
+    }
+  }
+}

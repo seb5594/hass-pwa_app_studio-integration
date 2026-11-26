@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nastavte PWA Web-App Studio"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA Web-App Studio je už nakonfigurovaný."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Otvorte PWA Web-App Studio",
+        "description": "Otvorte návrhára a spravujte svoje webové aplikácie."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "Panel bočného panela"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "Otvorte PWA Designer"
+      }
+    }
+  }
+}

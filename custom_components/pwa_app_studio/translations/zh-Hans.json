@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "设置PWA Web-App Studio"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA Web-App Studio 已配置。"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "打开PWA Web-App Studio",
+        "description": "打开设计器来管理您的网络应用程序。"
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "侧边栏面板"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "打开 PWA 设计器"
+      }
+    }
+  }
+}

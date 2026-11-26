@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurați PWA Web-App Studio"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA Web-App Studio este deja configurat."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Deschideți PWA Web-App Studio",
+        "description": "Deschideți designerul pentru a vă gestiona aplicațiile web."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "Panoul din bara laterală"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "Deschideți PWA Designer"
+      }
+    }
+  }
+}

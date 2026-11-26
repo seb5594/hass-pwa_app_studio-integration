@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Настройка PWA Web-App Studio"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA Web-App Studio уже настроен."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Открыть PWA Web-App Studio",
+        "description": "Откройте дизайнер для управления веб-приложениями."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "Боковая панель"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "Открыть конструктор PWA"
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Ställ in PWA Web-App Studio"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA Web-App Studio är redan konfigurerad."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Öppna PWA Web-App Studio",
+        "description": "Öppna designern för att hantera dina webbappar."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sidebar_panel": {
+        "name": "Sidebar Panel"
+      }
+    },
+    "button": {
+      "open_designer": {
+        "name": "Öppna PWA Designer"
+      }
+    }
+  }
+}

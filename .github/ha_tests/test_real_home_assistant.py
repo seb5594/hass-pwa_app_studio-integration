@@ -51,31 +51,50 @@ async def test_user_flow_creates_the_single_entry_and_refuses_a_second(hass):
 
 
 async def test_entry_loads_and_unloads(hass):
+    from homeassistant.helpers import entity_registry as er
+
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
-    assert any("pwa" in state.entity_id for state in hass.states.async_all("button"))
+    registry = er.async_get(hass)
+    for domain, suffix in (("button", "open_designer"), ("switch", "sidebar_panel")):
+        entity_id = registry.async_get_entity_id(domain, DOMAIN, f"{entry.entry_id}_{suffix}")
+        assert registry.async_get(entity_id).disabled_by is er.RegistryEntryDisabler.INTEGRATION
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_sidebar_option_reloads_panel(hass):
+async def test_options_open_the_studio_and_sidebar_visibility_follows_entry(hass):
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     panels = hass.data["frontend_panels"]
-    assert panels["pwa-app-studio"].sidebar_title == "PWA Web-App Studio"
-    flow = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        flow["flow_id"], {"show_in_sidebar": False}
-    )
-    assert result["type"] == "create_entry"
-    await hass.async_block_till_done()
     assert panels["pwa-app-studio"].sidebar_title is None
-    assert "pwa-app-studio-runner" in panels
+    flow = await hass.config_entries.options.async_init(entry.entry_id)
+    assert flow["type"] == "external"
+    assert flow["url"] == f"/pwa-app-studio?studio_options={flow['flow_id']}"
+    result = await hass.config_entries.options.async_configure(flow["flow_id"], {})
+    assert result["type"] == "external_done"
+    runner = panels["pwa-app-studio-runner"]
+    hass.config_entries.async_update_entry(entry, options={"show_in_sidebar": True})
+    await hass.async_block_till_done()
+    assert panels["pwa-app-studio"].sidebar_title == "PWA Web-App Studio"
+    assert panels["pwa-app-studio-runner"] is runner
+
+
+async def test_manual_release_labels_and_revision_endpoint(studio):
+    from custom_components.pwa_app_studio.presentation.http_views import PwaAppShellView, PwaReleaseView
+
+    app = await studio.async_create_app({"manifest": {"release_version": " 2.1 & beta "}})
+    reply = await PwaReleaseView(studio).get({}, app.slug)
+    assert json.loads(reply.text)["release"] == "2.1 & beta"
+    assert json.loads(reply.text)["revision"] == app.version
+    assert reply.headers["Cache-Control"] == "no-store"
+    shell = (await PwaAppShellView(studio).get({}, app.slug)).text
+    assert "App 2.1 &amp; beta developed by" in shell
 
 
 @pytest.fixture

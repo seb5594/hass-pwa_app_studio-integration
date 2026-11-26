@@ -37,7 +37,9 @@ You need **Home Assistant Core 2021.12.0 or later** and an administrator account
 2. Extract its contents into `custom_components/pwa_app_studio/` inside your Home Assistant configuration directory. You should end up with `custom_components/pwa_app_studio/manifest.json`.
 3. Restart Home Assistant and add **PWA Web-App Studio** under **Settings → Devices & services → Add integration**.
 
-Keep the administrator sidebar option enabled for quick access. You can also reach the designer at `/pwa-app-studio` on your Home Assistant server.
+Open **Settings → Devices & services → PWA Web-App Studio → Configure** and follow Home Assistant’s link to the designer. The direct path is `/pwa-app-studio`.
+
+If you work on apps every day, open the integration’s entity list, enable **Sidebar Panel**, and switch it on for a permanent shortcut. For a dashboard used by administrators, add a button card with a **Navigate** action to `/pwa-app-studio`. You can also enable **Open PWA Designer** and press it from your active administrator session. The optional switch and button are disabled in the entity registry on fresh setups.
 
 ## Build your first app
 
@@ -86,14 +88,22 @@ For browser sharing, the guest-mode QR code uses the internal Home Assistant add
 
 ### Approve the web app from the Companion App
 
+For example, Sebastian builds a web app for train departures and sends the browser link to his uncle on WhatsApp. His uncle is signed in to the official Home Assistant app and has access to that web app.
+
 1. In the Studio, open the saved app, enable **Access → Allow sign-in via the Companion App**, and save. Use HTTPS for the web app and in the Companion App. Select the same Home Assistant server in both places.
-2. Open the link in your browser or start the installed app. On iPhone or iPad, start from the Home Screen icon to sign in to the installed copy.
-3. Select **Sign in via the Companion App → Open Home Assistant**. Compare the displayed code with the one in your browser, then approve. If a code field appears, enter or paste the code manually. You can also open `/pwa-app-studio-connect` via a dashboard button in the Companion App.
+2. Open the link from WhatsApp in your browser. Select **Sign in via the Companion App**. The page displays a device code and a **Copy code** button. On iPhone or iPad, start from the Home Screen icon to sign in to the installed copy.
+3. Tap **Open Home Assistant**, check the selected server, app, account and code, and approve. If a code field appears, enter or paste the displayed code. You can also open `/pwa-app-studio-connect` via a dashboard button in the Companion App.
 4. Switch back to the same tab or installed web app. It signs in automatically, or you can tap **Check approval**. Each code is valid for five minutes and one sign-in. **Sign in in the browser** remains available.
 
 The web app gets a separate Home Assistant session with your account's existing permissions. Revoke it in your Home Assistant profile under **Security → Refresh tokens**.
 
 **Share link** uses the device share menu where available. In the Android Companion App, the share page can open in your default browser. If your browser has no Web Share support, use its own share menu or **Copy browser link**.
+
+### Edit and update a guest dashboard
+
+For a guest terrace dashboard, choose **Content → Pick individual cards**. Add a Markdown card with information for visitors and a button card for the patio light. Edit the title, text and entity in the card’s visible fields. Check the phone preview and save. Advanced card options remain available under **Card configuration**.
+
+Under **App → App version**, enter a label such as `1.1` and save. It appears in the app footer. A guest with the app already open sees **Update app** when it detects the saved revision. The button reloads the view and keeps the home-screen shortcut and existing browser session. Users who reopen the app online load the current version.
 
 Offline caching covers the app shell, icon and other public files. Cards, current states and device controls need a connection to Home Assistant.
 
@@ -123,3 +133,7 @@ If my work helped you or turned out to be useful, show your appreciation with a 
 
 Published under the [Apache License 2.0](LICENSE).
 <!-- license:end -->
+
+## Other languages
+
+[Français](docs/README.fr.md) · [Español](docs/README.es.md) · [Italiano](docs/README.it.md) · [Português](docs/README.pt.md) · [Português (Brasil)](docs/README.pt-BR.md) · [Nederlands](docs/README.nl.md) · [Polski](docs/README.pl.md) · [Čeština](docs/README.cs.md) · [Slovenčina](docs/README.sk.md) · [Magyar](docs/README.hu.md) · [Română](docs/README.ro.md) · [Български](docs/README.bg.md) · [Ελληνικά](docs/README.el.md) · [Svenska](docs/README.sv.md) · [Dansk](docs/README.da.md) · [Norsk](docs/README.nb.md) · [Suomi](docs/README.fi.md) · [Українська](docs/README.uk.md) · [Русский](docs/README.ru.md) · [Türkçe](docs/README.tr.md) · [简体中文](docs/README.zh-Hans.md) · [繁體中文](docs/README.zh-Hant.md) · [日本語](docs/README.ja.md) · [العربية](docs/README.ar.md) · [हिन्दी](docs/README.hi.md) · [עברית](docs/README.he.md) · [Bahasa Indonesia](docs/README.id.md) · [Hrvatski](docs/README.hr.md) · [Slovenščina](docs/README.sl.md) · [Eesti](docs/README.et.md) · [Latviešu](docs/README.lv.md) · [Lietuvių](docs/README.lt.md) · [Gaeilge](docs/README.ga.md) · [Malti](docs/README.mt.md) · [Íslenska](docs/README.is.md)

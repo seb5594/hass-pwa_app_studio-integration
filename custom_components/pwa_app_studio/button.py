@@ -27,6 +27,7 @@ class PwaAppStudioOpenDesignerButton(ButtonEntity):
     _attr_translation_key = "open_designer"
     _attr_icon = "mdi:cellphone-cog"
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_entity_registry_enabled_default = False
 
     if not hasattr(ButtonEntity, "translation_key"):
         _attr_name = "Open PWA Web-App Studio"
