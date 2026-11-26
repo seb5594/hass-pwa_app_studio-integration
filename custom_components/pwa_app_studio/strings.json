@@ -1,0 +1,42 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up PWA App Studio",
+        "description": "Configure the administrator-only PWA Designer.",
+        "data": {
+          "show_in_sidebar": "Enable administrator sidebar tab",
+          "sidebar_title": "Sidebar title",
+          "sidebar_icon": "Sidebar icon (MDI)",
+          "default_theme_color": "Default theme color",
+          "default_bg_color": "Default background color"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "PWA App Studio is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "PWA App Studio Options",
+        "description": "Adjust admin sidebar visibility and defaults. Even if the sidebar tab is disabled, the designer can be launched dynamically via the button entity.",
+        "data": {
+          "show_in_sidebar": "Enable administrator sidebar tab",
+          "sidebar_title": "Sidebar title",
+          "sidebar_icon": "Sidebar icon (MDI)",
+          "default_theme_color": "Default theme color",
+          "default_bg_color": "Default background color"
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "open_designer": {
+        "name": "Open PWA Designer"
+      }
+    }
+  }
+}

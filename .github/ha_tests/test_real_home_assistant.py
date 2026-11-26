@@ -24,7 +24,7 @@ async def test_user_flow_creates_the_single_entry_and_refuses_a_second(hass):
     assert result["type"] == "create_entry"
     await hass.async_block_till_done()
     again = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
-    assert again["type"] == "abort" and again["reason"] == "already_configured"
+    assert again["type"] == "abort" and again["reason"] == "single_instance_allowed"
 
 
 async def test_entry_loads_and_unloads(hass):

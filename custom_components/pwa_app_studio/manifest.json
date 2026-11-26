@@ -1,0 +1,24 @@
+{
+  "domain": "pwa_app_studio",
+  "name": "PWA App Studio",
+  "codeowners": [
+    "@seb5594"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "http",
+    "frontend",
+    "panel_custom",
+    "lovelace"
+  ],
+  "documentation": "https://github.com/seb5594/hass-pwa_app_studio-integration",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/seb5594/hass-pwa_app_studio-integration/issues",
+  "requirements": [
+    "pillow>=10.0.0",
+    "segno>=1.6.0"
+  ],
+  "single_config_entry": true,
+  "version": "1.0.0",
+  "integration_type": "service"
+}

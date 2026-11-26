@@ -1,11 +1,14 @@
-# Vorlage für Home-Assistant-Integrationen
+# PWA App Studio
 
-[🇬🇧 English](README.md) · **🇩🇪 Deutsch**
+[English](README.md) | **Deutsch**
 
-Die Vorlage enthält eine Beispielintegration mit Konfigurationsdialog, Tests gegen Home Assistant und einer Pipeline für die Release-ZIPs.
+Mit PWA App Studio erstellen Administratoren installierbare Web-Apps aus Lovelace-Dashboards oder ausgewählten Karten. Jede App hat eine eigene URL, ein Icon und eigene Freigaben.
 
-1. Erstelle ein Repository mit dem Namen `hass-<projekt>-integration`.
-2. Benenne `custom_components/example_integration/` um. Gleiche den Ordnernamen mit `domain` in `manifest.json`, `DOMAIN` in `const.py` und dem ZIP-Namen in `hacs.json` ab. Ersetze die Repository-URLs.
-3. Ersetze den Beispielcode und ergänze Tests unter `.github/tests/`. Tests für den echten Home-Assistant-Core gehören nach `.github/ha_tests/`. Die Untergrenze in `hacs.json` gibt an, welche Version du unterstützt.
-4. Hinterlege `ORCHESTRATION_PAT` für den Zugriff auf die private Workflow-Engine. Mit einem Checkout unter `.engine/` aktualisiert `python .engine/.scripts/readme.py` den Titel und die Badges der englischen README.
-5. Erhöhe für ein Release die Version in `manifest.json` und ergänze den [Changelog](CHANGELOG.md). Auf `main` veröffentlicht die Pipeline die ZIP-Dateien. Eine Version wie `1.0.0b1` kennzeichnet eine Vorabversion.
+## Ersten Entwurf ausprobieren
+
+1. Kopiere `custom_components/pwa_app_studio/` in den Ordner `custom_components/` einer Home-Assistant-Testinstallation.
+2. Starte Home Assistant neu und füge **PWA App Studio** unter **Einstellungen > Geräte & Dienste > Integration hinzufügen** hinzu.
+3. Öffne **PWA App Studio** in der Seitenleiste, wähle ein Dashboard oder füge Karten hinzu und speichere die App.
+4. Öffne den Installationslink oder QR-Code auf einem Gerät, das Home Assistant über HTTPS erreicht.
+
+Die App verwendet das angemeldete Home-Assistant-Konto. Für ein Dashboard gelten weiterhin dessen Berechtigungen in Home Assistant. Der Offline-Cache speichert die App-Hülle und statische Dateien. Lovelace-Inhalte brauchen eine Verbindung zu Home Assistant.
