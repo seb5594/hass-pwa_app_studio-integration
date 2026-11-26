@@ -1,6 +1,6 @@
 /* Standalone PWA runtime hosted at /pwa_app_studio/app/<slug>/ handling SW, IndieAuth PKCE, ACL check, and device install. */
 
-import { chromeInstallLink } from "./pwa-install.js";
+import { chromeBrowserLink } from "./pwa-install.js";
 import { waitForDeviceApproval } from "./pwa-companion-connect.js";
 import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
 
@@ -258,7 +258,7 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
     const { hint, android, embedded } = installInstructions();
     const installUrl = new URL(basePath, origin);
     installUrl.searchParams.set("auto_install", "1");
-    const chromeUrl = embedded ? chromeInstallLink(installUrl) : "";
+    const chromeUrl = embedded ? chromeBrowserLink(installUrl) : "";
 
     const banner = document.createElement("section");
     banner.id = "pwa-install-banner";
@@ -312,6 +312,40 @@ import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
         status.textContent = t("browser_selected");
       }
     };
+  }
+
+  function showSharePage() {
+    const data = { title: appName, url: redirectUri };
+    const status = document.getElementById("launch-status");
+    status.textContent = t("share_link_ready");
+    launch.dataset.style = "still";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = t("browser_share");
+    status.after(button);
+
+    const showChromeInstructions = () => {
+      // Chrome's own Share action uses the current address.
+      history.replaceState(null, "", redirectUri);
+      button.hidden = true;
+      status.textContent = t("share_chrome_menu");
+    };
+    if (!navigator.share || (navigator.canShare && !navigator.canShare(data))) {
+      showChromeInstructions();
+      return;
+    }
+    button.onclick = async () => {
+      try {
+        await navigator.share(data);
+      } catch (error) {
+        if (error?.name !== "AbortError") showChromeInstructions();
+      }
+    };
+  }
+
+  if (new URLSearchParams(location.search).get("share_link") === "1") {
+    showSharePage();
+    return;
   }
 
   renderInstallBannerIfWanted();

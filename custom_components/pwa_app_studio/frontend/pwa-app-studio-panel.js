@@ -1,6 +1,6 @@
 /* Admin-only PWA Web-App Studio Designer custom panel with Live Device Preview, Multi-Card Composer, Icon Studio & QR Distribution. */
 
-import { chromeInstallLink } from "./pwa-install.js";
+import { chromeBrowserLink } from "./pwa-install.js";
 import { loadPwaCardHelpers } from "./pwa-card-helpers.js";
 import { studioLanguage, studioMessage } from "./pwa-studio-i18n.js";
 
@@ -959,6 +959,7 @@ class PwaAppStudioPanel extends HTMLElement {
         .guest-note button { min-height:44px; margin:4px 0; }
         .guest-note a { color:inherit; text-underline-offset:3px; }
         .companion-link { display:inline-flex; align-items:center; min-height:44px; text-decoration:none; }
+        #share-in-chrome[hidden] { display:none; }
         .companion-card p { margin:8px 0 14px; line-height:1.5; }
         .share-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
         .share-actions .btn { min-height:44px; }
@@ -1391,7 +1392,10 @@ class PwaAppStudioPanel extends HTMLElement {
     const browserUrl = this._qrInfo?.launch_url || regularUrl;
     const installUrl = browserUrl ? new URL(browserUrl, location.origin) : null;
     installUrl?.searchParams.set("auto_install", "1");
-    const chromeUrl = detected.isAndroid && installUrl ? chromeInstallLink(installUrl) : "";
+    const chromeUrl = detected.isAndroid && installUrl ? chromeBrowserLink(installUrl) : "";
+    const shareUrl = browserUrl ? new URL(browserUrl, location.origin) : null;
+    shareUrl?.searchParams.set("share_link", "1");
+    const chromeShareUrl = detected.isAndroid && shareUrl ? chromeBrowserLink(shareUrl) : "";
     return `
       <div class="card-box companion-card">
         <strong>${this._t("companion_heading")}</strong>
@@ -1440,10 +1444,14 @@ class PwaAppStudioPanel extends HTMLElement {
           <div class="browser-share">
             <div class="browser-share-controls">
               <div class="share-actions">
-                <button class="btn primary" id="share-browser-link">${this._t("browser_share")}</button>
-                <button class="btn" id="copy-browser-link">${this._t("browser_copy")}</button>
+                ${chromeShareUrl
+                  ? `<a class="btn primary companion-link" id="share-browser-link" href="${this._esc(chromeShareUrl)}">${this._t("browser_share")}</a>`
+                  : `<button type="button" class="btn primary" id="share-browser-link">${this._t("browser_share")}</button>`}
+                <button type="button" class="btn" id="copy-browser-link">${this._t("browser_copy")}</button>
               </div>
-              <p id="browser-copy-status" class="install-hint" role="status" hidden></p>
+              <p id="browser-share-status" class="install-hint" role="status" hidden></p>
+              ${chromeShareUrl ? `<a class="btn companion-link" id="share-in-chrome"
+                href="${this._esc(chromeShareUrl)}" hidden>${this._t("share_open_chrome")}</a>` : ""}
               <label style="margin:10px 0 12px;">${this._t("qr_url")}
                 <input id="browser-url" readonly value="${this._esc(browserUrl)}" onclick="this.select()" />
               </label>
@@ -1788,7 +1796,8 @@ class PwaAppStudioPanel extends HTMLElement {
 
     const copyBrowserLink = async () => {
       const input = sr.getElementById("browser-url");
-      const status = sr.getElementById("browser-copy-status");
+      const status = sr.getElementById("browser-share-status");
+      sr.getElementById("share-in-chrome")?.setAttribute("hidden", "");
       status.hidden = false;
       try {
         await navigator.clipboard.writeText(input.value);
@@ -1800,19 +1809,30 @@ class PwaAppStudioPanel extends HTMLElement {
       }
     };
     sr.getElementById("copy-browser-link")?.addEventListener("click", copyBrowserLink);
-    sr.getElementById("share-browser-link")?.addEventListener("click", async () => {
-      if (navigator.share) {
+    sr.getElementById("share-browser-link")?.addEventListener("click", async (event) => {
+      const chromeLink = sr.getElementById("share-in-chrome");
+      const status = sr.getElementById("browser-share-status");
+      status.hidden = true;
+      if (chromeLink) chromeLink.hidden = true;
+      const data = {
+        title: this._apps.find(app => app.app_id === this._selectedAppId)?.manifest.name,
+        url: sr.getElementById("browser-url").value,
+      };
+      if (navigator.share && (!navigator.canShare || navigator.canShare(data))) {
+        event.preventDefault();
         try {
-          await navigator.share({
-            title: this._apps.find(app => app.app_id === this._selectedAppId)?.manifest.name,
-            url: sr.getElementById("browser-url").value,
-          });
+          await navigator.share(data);
           return;
         } catch (error) {
           if (error?.name === "AbortError") return;
         }
+      } else if (chromeLink) {
+        // The anchor opens Chrome with the original tap's user activation.
+        return;
       }
-      await copyBrowserLink();
+      status.textContent = this._t(chromeLink ? "share_chrome_hint" : "share_unavailable");
+      status.hidden = false;
+      if (chromeLink) chromeLink.hidden = false;
     });
     sr.getElementById("refresh-qr-btn")?.addEventListener("click", () =>
       this._loadQrCode()

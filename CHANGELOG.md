@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.11.26.11
+
+- Open the native share dialog where supported. On Android WebViews, hand the web app link to a share page in Chrome.
+
 ## 2026.11.26.10
 
 - Let users approve a separate web-app session from an already signed-in Companion App on Android or iOS. Site owners can enable this per web app.

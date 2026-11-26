@@ -1,5 +1,5 @@
-/* Build the Android Chrome handoff from a regular install URL. */
-export function chromeInstallLink(url) {
+/* Build the Android Chrome handoff from an HTTP(S) URL. */
+export function chromeBrowserLink(url) {
   const target = new URL(url);
   if (!["https:", "http:"].includes(target.protocol) || target.username || target.password) return "";
   target.hash = "";
