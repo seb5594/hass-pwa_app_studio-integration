@@ -24,6 +24,7 @@ class SidebarPanelSwitch(SwitchEntity):
     _attr_icon = "mdi:dock-left"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_entity_registry_enabled_default = False
+    _attr_should_poll = False
 
     if not hasattr(SwitchEntity, "translation_key"):
         _attr_name = "Sidebar Panel"
