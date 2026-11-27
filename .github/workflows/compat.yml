@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: seb5594/hass-workflows
-          ref: ce7b788e9a6b5cfdc0f1a46ef09e07bd3bf7c504
+          ref: main
           token: ${{ secrets.ORCHESTRATION_PAT || github.token }}
           path: .engine
           persist-credentials: false
@@ -59,7 +59,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: seb5594/hass-workflows
-          ref: ce7b788e9a6b5cfdc0f1a46ef09e07bd3bf7c504
+          ref: main
           token: ${{ secrets.ORCHESTRATION_PAT || github.token }}
           path: .engine
           persist-credentials: false
@@ -80,7 +80,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: seb5594/hass-workflows
-          ref: ce7b788e9a6b5cfdc0f1a46ef09e07bd3bf7c504
+          ref: main
           token: ${{ secrets.ORCHESTRATION_PAT || github.token }}
           path: .engine
           persist-credentials: false
